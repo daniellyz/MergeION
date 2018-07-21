@@ -1,11 +1,14 @@
 Package: MergeION
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
-Encoding: UTF-8
+Title: Merge Targeted Scans from Multiple LC-MS/MS Raw Data Files
+Version: 0.1
+Date: 2018-07-20
+Author: Youzhong LIU
+Maintainer: Youzhong LIU <Youzhong.Liu@uantwerpen.be>
+Description: In tandem mass spectrometry-based metabolomics, automated structure identification is usually performed by spectral library search and in silico fragmentation (smart algorithms).
+The missing steps towards complete automation are the pre-processing and format conversion of raw chromatograms. 
+The package fills these gaps and enables batch-processing of targeted MS/MS scans on commonly used structure elucidation software, including CSI:FingerID, MSFinder, GNPS and Metfrag. 
+To achieve this, MS/MS scans from one or multiple raw chromatogram files are extracted according to m/z (and retention time) provided by users. 
+They are then merged into a single "spectral library" that also contain user-provided metadata. The spectral library can be exported to different formats compatible with different software tools.
+License: GPL2
 LazyData: true
