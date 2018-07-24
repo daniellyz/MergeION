@@ -12,7 +12,8 @@
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
 #' @param search_adduct Boolean indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched
 #' @param baseline Numeric, the minimum intensity that is considered as a mass peak and written into the library
-#' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to NULL if the new library has no dependency with previous ones.
+#' @param normalized Boolean, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
+#' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param ouput_library Name of the output library, the file extension must be mgf
 #'
 #' @return
@@ -20,16 +21,21 @@
 #'   \item{"sp"}{List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
 #'   \item{"metadata"}{Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following columns are added: FILENAME, MSLEVEL, TIC, ADDUCT, SCANNUMBER and SCANS}
 #'   \item{"<ouput_library>"}{A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
-#'   \item{"<ouput_library>.txt"}{Metadata will be written as a txt in user's working directory. Users can check this file in excel or open office.}
+#'   \item{"<ouput_library>.txt"}{Metadata will be written as a .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
+#' @author Youzhong Liu, \email{Youzhong.Liu@uantwerpen.be}
+#'
+#' @examples
+#'
+#'
 #'
 #' @export
 #'
-#' @importFrom MSnbase
-#' @importFrom tools
+#' @importFrom MSnbase readMSData rtime tic fData readMgfData
+#' @importFrom tools file_ext
+#' @importFrom utils write.table read.csv
 
-
-library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,search_adduct = T,baseline = 1000, normalized=T, input_library=NULL, output_library=NULL){
+library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,search_adduct = T,baseline = 1000, normalized=T, input_library="", output_library=""){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -63,17 +69,17 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   if (!all(MS2_type %in% c("DDA","Targeted"))){
     stop("MS_type must be either DDa or Targeted!")}
 
-  if (!is.null(input_library)){
+  if (input_library!=""){
     if (file_ext(input_library)!="mgf"){
       stop("The input library must be mgf format!")
     }}
 
-  if (is.null(output_library) || missing(output_library) || file_ext(output_library)!="mgf"){
+  if (missing(output_library) || file_ext(output_library)!="mgf"){
     stop("The output library in mgf format must be filled!")
   }
 
   if (input_library==output_library){
-    stop("The new library must be saved under a different name as the previous library!")
+      stop("The new library must be saved under a different name as the previous library!")
   }
 
   ####################################
@@ -94,7 +100,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   if (ncol(ref)<4 || !is.numeric(ref$PEPMASS) || !all(ref$IONMODE %in% c("Positive","Negative"))){
     stop("Metadata format not valid!")}
 
-  if (!is.null(input_library)){
+  if (input_library!=""){
     old_dat=readMgfData(input_library, verbose = FALSE)
     spectrum_list=Mgf2Splist(old_dat)
     metadata=fData(old_dat)
