@@ -1,6 +1,8 @@
-process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,baseline= 1000,normalized=T){
+#' Read and combine targeted MS1 scans from one LC-MS/MS file
+#'
+#' Function used by library_generator to detect MS1 scans
 
-  # The function reads from 1 raw data and extracts a list of targeted spectra (Scans) and modified metadata
+process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,baseline= 1000,normalized=T){
 
   ### Read new spectra and meta data:
 

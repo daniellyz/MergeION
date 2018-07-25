@@ -2,7 +2,7 @@
 % Please edit documentation in R/library_generator.r
 \name{library_generator}
 \alias{library_generator}
-\title{Batch processing of mzML/mzXML files into a spectral library}
+\title{Batch processing of LC-MS/MS chromatograms into a spectral library}
 \usage{
 library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
   MS2_type = "DDA", rt_search = 12, ppm_search = 20, search_adduct = T,
@@ -22,9 +22,11 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 
 \item{ppm_search}{m/z search tolerance (in ppm) for targeted m/z}
 
-\item{search_adduct}{Boolean indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched}
+\item{search_adduct}{Logical indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched}
 
 \item{baseline}{Numeric, the minimum intensity that is considered as a mass peak and written into the library}
+
+\item{normalized}{Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100}
 
 \item{input_library}{Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.}
 
@@ -39,7 +41,7 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 }
 }
 \description{
-The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML or mzMXL
+The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData
 }
 \examples{
 

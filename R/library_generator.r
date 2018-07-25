@@ -1,8 +1,6 @@
-
-
-#' Batch processing of mzML/mzXML files into a spectral library
+#' Batch processing of LC-MS/MS chromatograms into a spectral library
 #'
-#' The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML or mzMXL
+#' The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData
 #'
 #' @param raw_data_files A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!
 #' @param metadata_file File name of the metadata. Must be a single character with csv extension.
@@ -10,9 +8,9 @@
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
-#' @param search_adduct Boolean indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched
+#' @param search_adduct Logical indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched
 #' @param baseline Numeric, the minimum intensity that is considered as a mass peak and written into the library
-#' @param normalized Boolean, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
+#' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param ouput_library Name of the output library, the file extension must be mgf
 #'
@@ -51,8 +49,8 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   if (missing(raw_data_files) || (!is.vector(raw_data_files))){
     stop("Please provide a list of chromatogram files!")}
 
-  if (!all(file_ext(raw_data_files) %in% c("mzML","mzXML"))){
-    stop("Chromatogram files must be in mzML or mzXML format!")}
+  if (!all(file_ext(raw_data_files) %in% c("mzML","mzXML","mzData"))){
+    stop("Chromatogram files must be in mzML, mzXML or mzData format!")}
 
   if (missing(metadata_file) || (!is.character(metadata_file)) || (length(metadata_file)!=1) || file_ext(metadata_file)!="csv"){
     stop("Metadata must be written in one single csv!")}

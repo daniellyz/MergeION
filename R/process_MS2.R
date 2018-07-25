@@ -1,6 +1,8 @@
-process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
+#' Read and combine targeted MS2 scans from one LC-MS/MS file
+#'
+#' Function used by library_generator to detect MS2 scans
 
-  # The function reads from 1 raw data and extracts a list of targeted spectra (Scans) and modified metadata
+process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
 
 
   ### Read new spectra and meta data:
