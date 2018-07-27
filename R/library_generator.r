@@ -4,7 +4,7 @@
 #'
 #' @param raw_data_files A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!
 #' @param metadata_file File name of the metadata. Must be a single character with csv extension.
-#' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted)
+#' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
@@ -31,10 +31,10 @@
 #'
 #' url = "https://zenodo.org/record/1322562/files/"
 #' original_files = c("TESTMIX2_180504_MAS011_06.mzXML","JNJ42165279_171214_MAS006_14.mzXML","GMP_R601592_150925_MAS006_04.mzXML")
-#' download.file(paste0(url,original_files[1]),destfile="F1.mzXML")
+#' download.file(paste0(url,original_files[1]),destfile="F1.mzXML") # Download and rename the files
 #' download.file(paste0(url,original_files[2]),destfile="F2.mzXML")
 #' download.file(paste0(url,original_files[3]),destfile="F3.mzXML")
-
+#'
 #' ### It is time to batch-process the first two files and create our first spectral library:
 #'
 #' raw_data_files=c("F1.mzXML","F2.mzXML")
