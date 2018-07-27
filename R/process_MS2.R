@@ -1,6 +1,7 @@
 #' Read and combine targeted MS2 scans from one LC-MS/MS file
 #'
 #' Function used by library_generator to detect MS2 scans
+#' @export
 
 process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
 
@@ -23,9 +24,9 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
   ### Read the raw data file
 
-  MS2_Janssen <- readMSData(mzdatafiles, msLevel = 2,  verbose = FALSE)
+  MS2_Janssen <- try(readMSData(mzdatafiles, msLevel = 2,  verbose = FALSE),silent=T)
 
-  if (length(MS2_Janssen)>0){ # If data contains MS2 scan
+  if (class(MS2_Janssen)!="try-error"){ # If data contains MS2 scan
 
     MS2_prec_rt = rtime(MS2_Janssen) # In second
     MS2_tic = tic(MS2_Janssen)
@@ -127,7 +128,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
       dat = cbind(MS2_scan_list[[i]]@mz,MS2_scan_list[[i]]@intensity)
 
       # Cut only masses smaller than precursor and filter background noise:
-      selected = which((dat[,1] < new_MS2_meta_data$PEPMASS[i]+3) & (dat[,2]>baseline))
+      selected = which((dat[,1] < new_MS2_meta_data$PEPMASS[i]+10) & (dat[,2]>baseline))
       if (length(selected)>0){
         dat = dat[selected,]
         dat = matrix(dat,ncol=2)
@@ -138,6 +139,10 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
   ### Keep only no empty spectra
     new_MS2_meta_data = new_MS2_meta_data[included,]
-  }}
+  }
+ } else {
+  print(paste0("No MS2 scan in the data file ",mzdatafiles," !"))
+ }
+
   return(list(sp=spectrum_list,metadata=new_MS2_meta_data))
 }

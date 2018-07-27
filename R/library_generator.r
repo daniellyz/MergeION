@@ -4,28 +4,56 @@
 #'
 #' @param raw_data_files A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!
 #' @param metadata_file File name of the metadata. Must be a single character with csv extension.
-#' @param mslevel Must be 1 (if only MS1 scans are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted)
+#' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted)
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
-#' @param search_adduct Logical indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched
+#' @param search_adduct Logical indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched. If FALSE, only [M+H+] and [M-H+] adducts are considered.
 #' @param baseline Numeric, the minimum intensity that is considered as a mass peak and written into the library
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
-#' @param ouput_library Name of the output library, the file extension must be mgf
+#' @param output_library Name of the output library, the file extension must be mgf
 #'
 #' @return
 #' \itemize{
-#'   \item{"sp"}{List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-#'   \item{"metadata"}{Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following columns are added: FILENAME, MSLEVEL, TIC, ADDUCT, SCANNUMBER and SCANS}
-#'   \item{"<ouput_library>"}{A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
-#'   \item{"<ouput_library>.txt"}{Metadata will be written as a .txt file in user's working directory. Users can check this file in excel or open office.}
+#'   \item{"sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
+#'   \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following columns are added: FILENAME, MSLEVEL, TIC, ADDUCT, SCANNUMBER and SCANS}
+#'   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
+#'   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
+#'
 #' @author Youzhong Liu, \email{Youzhong.Liu@uantwerpen.be}
 #'
 #' @examples
+#' # All example data files can be download from:  https://zenodo.org/record/1322562
+#' # Please download and copy all files into your R working directory!
+#' # It is time to batch-process the three first files and create our first spectral library:
 #'
+#' raw_data_files = c("NA_170405_MAS006_10.mzML",
+#'                 "TESTMIX2_180504_MAS011_06.mXML",
+#'                 "JNJ42165279_171214_MAS006_14.mzXML")
+#' metadata_file = "library_metadata.csv"
+#' mslevel = c(1,2) # Both MS1 and MS2 scans are extracted! MS1 scan contains isotopic pattern of targeted m/z
+#' MS2_type = c("DDA","DDA","Targeted") # Mode of MS/MS experiment.
+#' rt_search = 12 # Retention time tolerance (s)
+#' ppm_search = 10  # Mass tolerance (ppm)
+#' baseline = 1000 # Noise level of mass spectra, can be determined using spectral visualizer such as MZMine
+#' input_library = "" # A brand new library, there's no previous dependency
+#' output_library = "library_V1.mgf" # Name of the library
 #'
+#' library1=library_generator(raw_data_files,metadata_file,mslevel=c(1,2),MS2_type,rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+#'
+#' # New file arrives and we added the targeted scans to spectral library version 2:
+#'
+#' raw_data_files="GMP_R601592_150925_MAS006_04.mzXML" # The new LC-MS/MS data
+#' MS2_type = "DDA"
+#' metadata_file = "library_metadata_GMP.csv"
+#' input_library = "library_V1.mgf" # The first mgf file of library1
+#' output_library = "library_V2.mgf" # The name of the new spectral library
+#'
+#' library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+#'
+#' # Two spectral library files "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 #'
 #' @export
 #'
@@ -118,7 +146,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     if (1 %in% mslevel){
       dat1 = process_MS1(raw_data_files[ff],ref,rt_search,ppm_search,search_adduct, baseline)
       LL1= length(dat1$sp) # Added library size
-      if (length(LL1)>0){
+      if (LL1>0){
         for (n in 1:LL1){spectrum_list[[NN+n]]=dat1$sp[[n]]} # Update spectrum list
         metadata=rbind(metadata,dat1$metadata) # Update metadata
         NN=NN+LL1
@@ -127,7 +155,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     if (2 %in% mslevel){
       dat2 = process_MS2(raw_data_files[ff],ref,rt_search,ppm_search,search_adduct, MS2_type[ff], baseline)
       LL2= length(dat2$sp) # Added library size
-      if (length(LL2)>0){
+      if (LL2>0){
         for (n in 1:LL2){spectrum_list[[NN+n]]=dat2$sp[[n]]} # Update spectrum list
         metadata=rbind(metadata,dat2$metadata) # Update metadata
         NN=NN+LL2

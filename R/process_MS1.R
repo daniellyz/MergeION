@@ -1,6 +1,7 @@
 #' Read and combine targeted MS1 scans from one LC-MS/MS file
 #'
 #' Function used by library_generator to detect MS1 scans
+#' @export
 
 process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,baseline= 1000,normalized=T){
 
@@ -14,7 +15,7 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
   MS1_Janssen = NULL
   new_MS1_meta_data = c() # Compounds detected in the ms data
   MS1_scan_list = list() # List of spectrum2 objects
-  scan_number = c() # Which scan number in the raw chromatogram is found
+  scan_number = c() # Which scan number in the raw chromatogram
   new_PEP_mass = c() # The real mass in samples
   ADDUCT_LABEL = c()
   spectrum_list = list() # List of spectra to save
@@ -22,9 +23,9 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
   ### Read the raw data file
 
-  MS1_Janssen <- readMSData(mzdatafiles, msLevel = 1, verbose = FALSE)
+  MS1_Janssen <- try(readMSData(mzdatafiles, msLevel = 1, verbose = FALSE),silent=T)
 
-  if (length(MS1_Janssen)>0){ # If data contains MS1 scan
+  if (class(MS1_Janssen)!="try-error"){ # If data contains MS1 scan
 
     MS1_prec_rt = rtime(MS1_Janssen)
     int_max_list = c() # Maximal intensity of MS1 mass
@@ -122,7 +123,12 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
     ### Keep only no empty spectra
     new_MS1_meta_data = new_MS1_meta_data[included,]
-  }}
+  }
+  } else {
+   print(paste0("No MS1 scan in the data file ",mzdatafiles," !"))
+ }
+
+
   return(list(sp=spectrum_list,metadata=new_MS1_meta_data))
 }
 
