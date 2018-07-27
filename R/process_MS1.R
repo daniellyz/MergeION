@@ -27,6 +27,8 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
   if (class(MS1_Janssen)!="try-error"){ # If data contains MS1 scan
 
+    print(paste0("Processing MS1 scans of data file ",mzdatafiles," ..."))
+
     MS1_prec_rt = rtime(MS1_Janssen)
     int_max_list = c() # Maximal intensity of MS1 mass
 

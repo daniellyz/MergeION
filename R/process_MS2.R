@@ -28,6 +28,8 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
   if (class(MS2_Janssen)!="try-error"){ # If data contains MS2 scan
 
+    print(paste0("Processing MS2 scans of data file ",mzdatafiles," ..."))
+
     MS2_prec_rt = rtime(MS2_Janssen) # In second
     MS2_tic = tic(MS2_Janssen)
 
