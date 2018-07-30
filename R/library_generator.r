@@ -30,7 +30,9 @@
 #' # Details of these data can be found at: https://zenodo.org/record/1322562
 #'
 #' url = "https://zenodo.org/record/1322562/files/"
-#' original_files = c("TESTMIX2_180504_MAS011_06.mzXML","JNJ42165279_171214_MAS006_14.mzXML","GMP_R601592_150925_MAS006_04.mzXML")
+#' original_files = c("TESTMIX2_180504_MAS011_06.mzXML",
+#'                    "JNJ42165279_171214_MAS006_14.mzXML",
+#'                    "GMP_R601592_150925_MAS006_04.mzXML")
 #' download.file(paste0(url,original_files[1]),destfile="F1.mzXML") # Download and rename the files
 #' download.file(paste0(url,original_files[2]),destfile="F2.mzXML")
 #' download.file(paste0(url,original_files[3]),destfile="F3.mzXML")
@@ -39,7 +41,8 @@
 #'
 #' raw_data_files=c("F1.mzXML","F2.mzXML")
 #' metadata_file = paste0(url,"library_metadata.csv")
-#' mslevel = c(1,2) # Both MS1 and MS2 scans are extracted! MS1 scan contains isotopic pattern of targeted m/z
+#' mslevel = c(1,2)
+#' # Both MS1 and MS2 scans are extracted! MS1 scan contains isotopic pattern of targeted m/z
 #' MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment.
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
@@ -47,7 +50,8 @@
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
-#' library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+#' library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,
+#'     rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
 #'
 #' ### We added the targeted scans of F3.mzXML to spectral library version 2:
 #'
@@ -57,9 +61,10 @@
 #' input_library = "library_V1.mgf" # The first mgf file of library1
 #' output_library = "library_V2.mgf" # The name of the new spectral library
 #'
-#' library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+#' library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,
+#'     rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
 #'
-#' # In the end, two spectral library files "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
+#' # In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 #'
 #' @export
 #'

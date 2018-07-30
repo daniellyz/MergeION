@@ -25,7 +25,7 @@ CSI_FingerID_writer<-function(library){
 
   if (file.exists(subDir)){ # If the folder already exists, remove every thing inside the folder
     setwd(file.path(mainDir, subDir))
-    unlink(list.files())
+    unlink(list.files(),force=T)
     setwd(file.path(mainDir))
   } else {  # If the folder doesn't exist, we create one
     dir.create(file.path(mainDir, subDir))
@@ -74,7 +74,7 @@ CSI_FingerID_writer<-function(library){
   for (i in 1:N){
 
     id=ID_list[i]
-    con <- file(description = paste0(id,".ms"), open = "at")
+    con <- file(description = paste0(id,".ms"), open = "w")
     on.exit(close(con))
 
     index_MS1 = which(metadata$ID == id & metadata$MSLEVEL == "1")
