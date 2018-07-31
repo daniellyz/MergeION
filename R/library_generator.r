@@ -11,6 +11,7 @@
 #' @param search_adduct Logical indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched. If FALSE, only [M+H+] and [M-H+] adducts are considered.
 #' @param baseline Numeric, the minimum intensity that is considered as a mass peak and written into the library
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
+#' @param consensus.algorithm Choice of algorithm to reduce spectral library size. "Highest": withholding the scan (MS1 and MS) with highest TIC for each ID; "Average_all" & "Average_clean": combining (m/z alignment) and averaging (intensity) all spectra that belong to the same ID, only work when spectra are normalized, for "Average_clean" only mass peaks present in all scans of the same ID are kept; "None": No filtering is applied.
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param output_library Name of the output library, the file extension must be mgf
 #'
@@ -50,8 +51,9 @@
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
-#' library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,
-#'     rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+#' library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,
+#'       search_adduct = F,baseline,normalized = T, consensus.algorithm="None",
+#'       input_library, output_library)
 #'
 #' ### We added the targeted scans of F3.mzXML to spectral library version 2:
 #'
@@ -61,10 +63,11 @@
 #' input_library = "library_V1.mgf" # The first mgf file of library1
 #' output_library = "library_V2.mgf" # The name of the new spectral library
 #'
-#' library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,
-#'     rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+#' library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,
+#'       search_adduct = F,baseline,normalized = T, consensus.algorithm="Average_all",
+#'       input_library, output_library)
 #'
-#' # In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
+#' ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 #'
 #' @export
 #'
@@ -72,14 +75,16 @@
 #' @importFrom tools file_ext
 #' @importFrom utils write.table read.csv
 
-library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,search_adduct = T,baseline = 1000, normalized=T, input_library="", output_library=""){
+library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,
+                            search_adduct = T,baseline = 1000, normalized=T, consensus.algorithm=c("Highest","Average_all","Average_clean","None"),
+                            input_library="", output_library=""){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
   FF = length(raw_data_files)
-  spectrum_list=list()
-  metadata=c()
-  NN=0
+  spectrum_list = list()
+  metadata = c()
+  NN = 0
 
   ##############################
   ### Check function inputs:
@@ -103,8 +108,12 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     if (length(MS2_type)!=FF){
       stop("The length of MS2_type must be the same as raw_data_files!")}}
 
-  if (!all(MS2_type %in% c("DDA","Targeted"))){
-    stop("MS_type must be either DDa or Targeted!")}
+  MS2_type = match.arg(MS2_type,choices=c("DDA","Targeted"),several.ok = TRUE)
+  consensus.algorithm = match.arg(consensus.algorithm,choices=c("Highest","Average_all","Average_clean","None"))
+
+  if (!normalized & (consensus.algorithm %in% c("Average_all","Average_clean"))){
+    stop("Normalization is required for averaged consensus spectra generation!")
+  }
 
   if (input_library!=""){
     if (file_ext(input_library)!="mgf"){
@@ -173,25 +182,34 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
       }}
   }
 
-  #####################################
-  ### Find the scan with the highest TIC:
-  #####################################
+  ##################################
+  ### Generating consensus library:
+  ##################################
 
-  valid=filter_scans(metadata)
-  metadata = metadata[valid,]
-  metadata = cbind.data.frame(metadata,SCANS=1:nrow(metadata))
-  spectrum_list = spectrum_list[valid]
+  if (consensus.algorithm=="Highest"){
+    library=process_library(spectrum_list,metadata, consensus=F)}
+
+  if (consensus.algorithm=="Average_all"){
+    library=process_library(spectrum_list,metadata, consensus=T, ppm_window = ppm_search, clean = F)}
+
+  if (consensus.algorithm=="Average_clean"){
+    library=process_library(spectrum_list,metadata, consensus=T, ppm_window = ppm_search, clean = T)}
+
+  if (consensus.algorithm=="None"){
+    library=list(sp=spectrum_list,metadata=metadata)}
+
+  library$metadata = cbind.data.frame(library$metadata,SCANS=1:nrow(library$metadata))
 
   #####################################
   ### Return results:
   #####################################
 
-  writeMGF2(spectrum_list,metadata,output_library)
-  write.table(metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
-  return(list(sp=spectrum_list,metadata=metadata))
+  writeMGF2(library$sp,library$metadata,output_library)
+  write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
+  return(library)
 }
 
-############################
+###########################
 ### Internal functions:
 ###########################
 
@@ -202,42 +220,6 @@ Mgf2Splist<-function(MGFdat){
   spectrum_list=list()
   for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
   return(spectrum_list)
-}
-
-filter_scans<-function(metadata){
-
-  # For each feature find the scan with highest TIC, return index of filtered scans
-
-  valid1=c()
-  valid2=c()
-
-  # First MS1:
-  index1=which(metadata$MSLEVEL==1)
-  if (length(index1)>0){
-    metadata1=metadata[index1,]
-    ID_list=unique(metadata1$ID)
-    for (ID in ID_list){
-      selected_rows = which(metadata1$ID==ID)
-      tics=metadata$TIC[selected_rows]
-      wm=which.max(tics)
-      valid1=c(valid1,selected_rows[wm])}
-  valid1=index1[valid1]}
-
-  # Then MS2:
-  index2=which(metadata$MSLEVEL==2)
-  if (length(index2)>0){
-    metadata2=metadata[index2,]
-    ID_list=unique(metadata2$ID)
-    for (ID in ID_list){
-      selected_rows = which(metadata2$ID==ID)
-      tics=metadata$TIC[selected_rows]
-      wm=which.max(tics)
-      valid2=c(valid2,selected_rows[wm])}
-    valid2=index2[valid2]}
-
-  # Combine:
-  valid=c(valid1,valid2)
-  return(valid)
 }
 
 writeMGF2 <- function(splist, metadata, con) {

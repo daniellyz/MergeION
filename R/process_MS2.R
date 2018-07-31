@@ -68,7 +68,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
             error=abs(Frag_data@precursorMz-prec_theo[i])/prec_theo[i]*1000000
             if (search_adduct){
               error1 = abs(Frag_data@precursorMz-prec_adduct)/prec_adduct*1000000
-              if (error1<error){ # If adduct error smaller than original
+              if (error1<error){# If adduct error smaller than original
                 error = error1
                 adduct_type = 1}}}
 
@@ -105,7 +105,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
         if (ref$IONMODE[i]=="Positive" & new_adduct_type==1){ADDUCT_LABEL=c(ADDUCT_LABEL,"M+Na")}
         if (ref$IONMODE[i]=="Positive" & new_adduct_type==0){ADDUCT_LABEL=c(ADDUCT_LABEL,"M+H")}
         if (ref$IONMODE[i]=="Negative" & new_adduct_type==1){ADDUCT_LABEL=c(ADDUCT_LABEL,"M+Cl")}
-        if (ref$IONMODE[i]=="Nagative" & new_adduct_type==0){ADDUCT_LABEL=c(ADDUCT_LABEL,"M-H")}
+        if (ref$IONMODE[i]=="Negative" & new_adduct_type==0){ADDUCT_LABEL=c(ADDUCT_LABEL,"M-H")}
 
         MS2_scan_list[[N+1]]=MS2_Janssen[[valid_k]]
         N=N+1

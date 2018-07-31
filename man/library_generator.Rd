@@ -6,7 +6,8 @@
 \usage{
 library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
   MS2_type = "DDA", rt_search = 12, ppm_search = 20, search_adduct = T,
-  baseline = 1000, normalized = T, input_library = "",
+  baseline = 1000, normalized = T, consensus.algorithm = c("Highest",
+  "Average_all", "Average_clean", "None"), input_library = "",
   output_library = "")
 }
 \arguments{
@@ -27,6 +28,8 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 \item{baseline}{Numeric, the minimum intensity that is considered as a mass peak and written into the library}
 
 \item{normalized}{Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100}
+
+\item{consensus.algorithm}{Choice of algorithm to reduce spectral library size. "Highest": withholding the scan (MS1 and MS) with highest TIC for each ID; "Average_all" & "Average_clean": combining (m/z alignment) and averaging (intensity) all spectra that belong to the same ID, only work when spectra are normalized, for "Average_clean" only mass peaks present in all scans of the same ID are kept; "None": No filtering is applied.}
 
 \item{input_library}{Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.}
 
@@ -68,8 +71,9 @@ baseline = 1000 # Noise level of mass spectra, can be determined using spectral 
 input_library = "" # A brand new library, there's no previous dependency
 output_library = "library_V1.mgf" # Name of the library
 
-library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,
-    rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,
+      search_adduct = F,baseline,normalized = T, consensus.algorithm="None",
+      input_library, output_library)
 
 ### We added the targeted scans of F3.mzXML to spectral library version 2:
 
@@ -79,10 +83,11 @@ metadata_file = paste0(url,"library_metadata_GMP.csv")
 input_library = "library_V1.mgf" # The first mgf file of library1
 output_library = "library_V2.mgf" # The name of the new spectral library
 
-library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,
-    rt_search,ppm_search,search_adduct = F,baseline,normalized = T, input_library, output_library)
+library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,
+      search_adduct = F,baseline,normalized = T, consensus.algorithm="Average_all",
+      input_library, output_library)
 
-# In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
+### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 
 }
 \author{
