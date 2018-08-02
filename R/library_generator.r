@@ -3,12 +3,11 @@
 #' The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData
 #'
 #' @param raw_data_files A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!
-#' @param metadata_file File name of the metadata. Must be a single character with csv extension.
+#' @param metadata_file File name of the metadata. Must be a single character with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to find in chromatograms, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library).
 #' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
-#' @param search_adduct Logical indicating whether [M+Na+] (in positive mode) or [M+Cl-] (in negative mode) adducts are searched. If FALSE, only [M+H+] and [M-H+] adducts are considered.
 #' @param baseline Numeric, the minimum intensity that is considered as a mass peak and written into the library
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param consensus.algorithm Choice of algorithm to reduce spectral library size. "Highest": withholding the scan (MS1 and MS) with highest TIC for each ID; "Average_all" & "Average_clean": combining (m/z alignment) and averaging (intensity) all spectra that belong to the same ID, only work when spectra are normalized, for "Average_clean" only mass peaks present in all scans of the same ID are kept; "None": No filtering is applied.
@@ -18,7 +17,7 @@
 #' @return
 #' \itemize{
 #'   \item{"sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-#'   \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following columns are added: FILENAME, MSLEVEL, TIC, ADDUCT, SCANNUMBER and SCANS}
+#'   \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
 #'   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
 #'   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
@@ -30,7 +29,7 @@
 #' ### We download our three test data sets:
 #' # Details of these data can be found at: https://zenodo.org/record/1322562
 #'
-#' url = "https://zenodo.org/record/1322562/files/"
+#' url = "https://zenodo.org/record/1326555/files/"
 #' original_files = c("TESTMIX2_180504_MAS011_06.mzXML",
 #'                    "JNJ42165279_171214_MAS006_14.mzXML",
 #'                    "GMP_R601592_150925_MAS006_04.mzXML")
@@ -40,43 +39,42 @@
 #'
 #' ### It is time to batch-process the first two files and create our first spectral library:
 #'
-#' raw_data_files=c("F1.mzXML","F2.mzXML")
+#' raw_data_files = c("F1.mzXML","F2.mzXML")
 #' metadata_file = paste0(url,"library_metadata.csv")
 #' mslevel = c(1,2)
 #' # Both MS1 and MS2 scans are extracted! MS1 scan contains isotopic pattern of targeted m/z
-#' MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment.
+#' MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respectively
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
 #' baseline = 1000 # Noise level of mass spectra, can be determined using spectral visualizer such as MZMine
+#' consensus.algorithm = "None" # Currently we don't merge spectra with same ID
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
-#' library1=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,
-#'       search_adduct = F,baseline,normalized = T, consensus.algorithm="None",
-#'       input_library, output_library)
+#' library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
+#'       baseline,normalized = T, consensus.algorithm, input_library, output_library)
 #'
 #' ### We added the targeted scans of F3.mzXML to spectral library version 2:
 #'
-#' raw_data_files="F3.mzXML" # The new LC-MS/MS data
+#' raw_data_files = "F3.mzXML" # The new LC-MS/MS data
 #' MS2_type = "DDA"
-#' metadata_file = paste0(url,"library_metadata_GMP.csv")
+#' consensus.algorithm = "Average_all" # Currently we don't merge spectra with same ID
 #' input_library = "library_V1.mgf" # The first mgf file of library1
 #' output_library = "library_V2.mgf" # The name of the new spectral library
 #'
-#' library2=library_generator(raw_data_files,metadata_file,mslevel,MS2_type,rt_search,ppm_search,
-#'       search_adduct = F,baseline,normalized = T, consensus.algorithm="Average_all",
-#'       input_library, output_library)
+#' library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
+#'       baseline, normalized = T, consensus.algorithm, input_library, output_library)
 #'
 #' ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 #'
 #' @export
 #'
-#' @importFrom MSnbase readMSData rtime tic fData readMgfData
+#' @importFrom MSnbase readMSData rtime tic fData readMgfData precursorMz
 #' @importFrom tools file_ext
 #' @importFrom utils write.table read.csv
 
 library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,
-                            search_adduct = T,baseline = 1000, normalized=T, consensus.algorithm=c("Highest","Average_all","Average_clean","None"),
+                            baseline = 1000, normalized=T, consensus.algorithm=c("Highest","Average_all","Average_clean","None"),
                             input_library="", output_library=""){
 
   options(stringsAsFactors = FALSE)
@@ -141,10 +139,20 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   colnames(ref)[1]="PEPMASS"  # Make sure column name is correct!
   colnames(ref)[2]="RT"
   colnames(ref)[3]="IONMODE"
-  colnames(ref)[4]="ID"
+  colnames(ref)[4]="ADDUCT"
+  colnames(ref)[5]="ID"
 
-  if (ncol(ref)<4 || !is.numeric(ref$PEPMASS) || !all(ref$IONMODE %in% c("Positive","Negative"))){
-    stop("Metadata format not valid!")}
+  if (ncol(ref)<5){
+    stop("Metadata must contain at least 5 columns!")}
+
+  if (!is.numeric(ref$PEPMASS)){
+    stop("Precursor masses (PEPMASS) must be numeric!")}
+
+  if (!all(ref$IONMODE %in% c("Positive","Negative"))){
+    stop("Ion mode must be Postive or Negative!")}
+
+  if (!all(ref$ADDUCT %in% c("M+H","M+Na","M+K","M-H","M+Cl"))){
+    stop("Adduct type not valid!")}
 
   if (input_library!=""){
     old_dat=readMgfData(input_library, verbose = FALSE)
@@ -163,8 +171,18 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
 
   for (ff in 1:FF){
 
+    if (2 %in% mslevel){
+      dat2 = process_MS2(raw_data_files[ff],ref,rt_search,ppm_search, MS2_type[ff], baseline)
+      LL2 = length(dat2$sp) # Added library size
+      ref2 = dat2$ref_MS2 # Filter metadata data for MS1 searcch
+      if (LL2>0){
+        for (n in 1:LL2){spectrum_list[[NN+n]]=dat2$sp[[n]]} # Update spectrum list
+        metadata=rbind(metadata,dat2$metadata) # Update metadata
+        NN=NN+LL2
+      }}
+
     if (1 %in% mslevel){
-      dat1 = process_MS1(raw_data_files[ff],ref,rt_search,ppm_search,search_adduct, baseline)
+      dat1 = process_MS1(raw_data_files[ff],ref2,rt_search,ppm_search, baseline)
       LL1= length(dat1$sp) # Added library size
       if (LL1>0){
         for (n in 1:LL1){spectrum_list[[NN+n]]=dat1$sp[[n]]} # Update spectrum list
@@ -172,14 +190,6 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
         NN=NN+LL1
       }}
 
-    if (2 %in% mslevel){
-      dat2 = process_MS2(raw_data_files[ff],ref,rt_search,ppm_search,search_adduct, MS2_type[ff], baseline)
-      LL2= length(dat2$sp) # Added library size
-      if (LL2>0){
-        for (n in 1:LL2){spectrum_list[[NN+n]]=dat2$sp[[n]]} # Update spectrum list
-        metadata=rbind(metadata,dat2$metadata) # Update metadata
-        NN=NN+LL2
-      }}
   }
 
   ##################################

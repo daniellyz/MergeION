@@ -3,13 +3,7 @@
 #' Function used by library_generator to detect MS2 scans
 #' @export
 
-process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct = T,MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
-
-
-  ### Read new spectra and meta data:
-
-  prec_theo=ref$PEPMASS
-  prec_rt=as.numeric(ref$RT)*60 # Allow N/A
+process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
 
   ### Initialize variables
 
@@ -18,7 +12,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
   MS2_scan_list = list() # List of spectrum2 objects
   scan_number = c() # Which scan number in the raw chromatogram is found
   new_PEP_mass = c() # The real mass in samples
-  ADDUCT_LABEL = c() # Type of adduct of each scan
+  mass_dev = c() # Mass deviations in ppm
   spectrum_list = list() # List of spectra to save
   N=0 # Numerator
 
@@ -30,61 +24,60 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
 
     print(paste0("Processing MS2 scans of data file ",mzdatafiles," ..."))
 
-    MS2_prec_rt = rtime(MS2_Janssen) # In second
-    MS2_tic = tic(MS2_Janssen)
+    ### Filter ref because not all targeted m/z exists or fragmented in the sample! Important for not to search whatever
+
+    targets =  unique(precursorMz(MS2_Janssen))
+
+    dev_targets = sapply(ref$PEPMASS,function(x) min(abs(x-targets)))
+    valid = which(dev_targets <= 1) #  Find targeted metadata in experimental file!!
+
+    if (nrow(ref)>0){
+
+    ### Extract useful informations
+
+      prec_theo=ref$PEPMASS
+      prec_rt=as.numeric(ref$RT)*60 # Allow N/A
+      MS2_prec_rt = rtime(MS2_Janssen) # In second
+      MS2_tic = tic(MS2_Janssen)
 
     ### Check one by one targeted m/z:
 
-    for (i in 1:nrow(ref)){
+      for (i in 1:nrow(ref)){
 
       # Search RT window if provided:
 
-      if (!is.na(prec_rt[i])){
+        if (!is.na(prec_rt[i])){
         scan_range=which(MS2_prec_rt >= prec_rt[i] - rt_search & MS2_prec_rt <= prec_rt[i] + rt_search)
-      } else {
+        } else {
         scan_range=1:length(MS2_prec_rt)}
-
-     # Calculate adducts
-
-     if (search_adduct & (ref$IONMODE[i]=="Positive")){
-       prec_adduct = prec_theo[i] - 1.007276 + 22.989221} # Soidum
-
-     if (search_adduct & (ref$IONMODE[i]=="Negative")){
-       prec_adduct = prec_theo[i] + 1.007276 + 34.969401} # Chlore
 
      # Find the scan that corresponds to the meta data
 
       tic_max=0
+      prec_intensity=10
       valid_k=0
-      new_adduct_type=0
 
       if (length(scan_range)>0){
         # Check scan by scan the masses:
         for (k in scan_range){
           Frag_data = MS2_Janssen[[k]]
-          adduct_type = 0 # Default is no adduct!
 
           if (MS2_type=="DDA"){
-            error=abs(Frag_data@precursorMz-prec_theo[i])/prec_theo[i]*1000000
-            if (search_adduct){
-              error1 = abs(Frag_data@precursorMz-prec_adduct)/prec_adduct*1000000
-              if (error1<error){# If adduct error smaller than original
-                error = error1
-                adduct_type = 1}}}
+            error=abs(Frag_data@precursorMz-prec_theo[i])/prec_theo[i]*1000000}
 
           if (MS2_type=="Targeted"){
             error= min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
-          if (search_adduct){
-            error1 = min(abs(Frag_data@mz-prec_adduct)/prec_adduct*1000000)
-            if (error1<error){ # If adduct error smaller than original
-              error = error1
-              adduct_type = 1}}}
+            prec_ind = which.min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
+
+            # Make sure that the precursor mass detected in targeted mode must be at least 5 times higher than baseline!
+           if (Frag_data@intensity[prec_ind]<baseline*5) {
+             prec_intensity=0} else {prec_intensity=10}
+        }
 
       # We now check whether the isolated scan is better than previous:
-          if ((error<=ppm_search) & MS2_tic[k]>tic_max){
-            valid_k=k
-            tic_max=MS2_tic[valid_k]
-            new_adduct_type=adduct_type} # To check whether is original or adduct detected
+          if ((error<=ppm_search) & MS2_tic[k]>tic_max & prec_intensity==10){
+            valid_k=k # Update the scan number
+            tic_max=MS2_tic[valid_k]}
       }}
 
     if (valid_k==0){}
@@ -94,18 +87,24 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
       scan_number = c(scan_number,valid_k)  # Save scan number
 
       ### Update metadata:
+      # Save detected precursor mass:
 
-        if (MS2_type=="DDA"){new_PEP_mass = c(new_PEP_mass,MS2_Janssen[[valid_k]]@precursorMz)}
+        if (MS2_type=="DDA"){
+          mz = MS2_Janssen[[valid_k]]@precursorMz
+          dev_ppm= min(abs(mz-prec_theo[i])/prec_theo[i]*1000000)
+          dev_ppm=round(dev_ppm,2)
+          new_PEP_mass = c(new_PEP_mass,mz)
+          mass_dev = c(mass_dev,dev_ppm)
+        }
+
         if (MS2_type=="Targeted"){
           masslist=MS2_Janssen[[valid_k]]@mz
-          if (new_adduct_type==0){wp= which.min(abs(masslist-prec_theo[i])/prec_theo[i]*1000000)}
-          if (new_adduct_type==1){wp= which.min(abs(masslist-prec_adduct)/prec_adduct*1000000)}
-          new_PEP_mass = c(new_PEP_mass,masslist[wp])} # Save detected precursor mass
-
-        if (ref$IONMODE[i]=="Positive" & new_adduct_type==1){ADDUCT_LABEL=c(ADDUCT_LABEL,"M+Na")}
-        if (ref$IONMODE[i]=="Positive" & new_adduct_type==0){ADDUCT_LABEL=c(ADDUCT_LABEL,"M+H")}
-        if (ref$IONMODE[i]=="Negative" & new_adduct_type==1){ADDUCT_LABEL=c(ADDUCT_LABEL,"M+Cl")}
-        if (ref$IONMODE[i]=="Negative" & new_adduct_type==0){ADDUCT_LABEL=c(ADDUCT_LABEL,"M-H")}
+          wp= which.min(abs(masslist-prec_theo[i])/prec_theo[i]*1000000)
+          dev_ppm= min(abs(masslist-prec_theo[i])/prec_theo[i]*1000000)
+          dev_ppm=round(dev_ppm,2)
+          new_PEP_mass = c(new_PEP_mass,masslist[wp])
+          mass_dev = c(mass_dev,dev_ppm)
+        }
 
         MS2_scan_list[[N+1]]=MS2_Janssen[[valid_k]]
         N=N+1
@@ -118,7 +117,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
     new_MS2_meta_data[,"FILENAME"]=rep(mzdatafiles,N)
     new_MS2_meta_data[,"MSLEVEL"]=rep(2,N)
     new_MS2_meta_data[,"TIC"]= MS2_tic[scan_number]
-    new_MS2_meta_data[,"ADDUCT"] = ADDUCT_LABEL
+    new_MS2_meta_data[,"PEPMASS_DEV"]=mass_dev
     new_MS2_meta_data[,"SCAN_NUMBER"] = scan_number
 
   ### Denoise spectra
@@ -140,11 +139,16 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,search_adduct =
         included= c(included,i)}}
 
   ### Keep only no empty spectra
-    new_MS2_meta_data = new_MS2_meta_data[included,]
-  }
- } else {
+      new_MS2_meta_data = new_MS2_meta_data[included,]
+      id_kept = new_MS2_meta_data$ID
+      ref = ref[match(id_kept,ref$ID),]
+     }
+    } else {
+      print(paste0("No MS2 scan in the data file ",mzdatafiles," matches with metadata!"))}
+   } else {
   print(paste0("No MS2 scan in the data file ",mzdatafiles," !"))
  }
 
-  return(list(sp=spectrum_list,metadata=new_MS2_meta_data))
+  return(list(sp=spectrum_list,metadata=new_MS2_meta_data,ref_MS2=ref))
 }
+

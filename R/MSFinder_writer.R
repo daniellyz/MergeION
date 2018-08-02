@@ -87,6 +87,7 @@ MSFinder_writer<-function(library){
     if (metadata$ADDUCT[index_MS2]=="M-H"){.cat("PRECURSORTYPE: [M-H]-","\n")}
     if (metadata$ADDUCT[index_MS2]=="M+Na"){.cat("PRECURSORTYPE: [M+Na]+","\n")}
     if (metadata$ADDUCT[index_MS2]=="M+Cl"){.cat("PRECURSORTYPE: [M+Cl]-","\n")}
+    if (metadata$ADDUCT[index_MS2]=="M+K"){.cat("PRECURSORTYPE: [M+K]+","\n")}
 
     .cat("IONMODE: ",metadata$IONMODE[index_MS2],"\n")
 
@@ -116,7 +117,6 @@ MSFinder_writer<-function(library){
   #try(close(con),silent=T)
 
   setwd(file.path(mainDir))
-
 }
 
 ############################

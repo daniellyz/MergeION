@@ -21,7 +21,7 @@ process_library(spectrum_list, metadata, consensus = T, ppm_window = 10,
 \value{
 \itemize{
   \item{"sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-  \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following columns are added: FILENAME, MSLEVEL, TIC, ADDUCT, SCANNUMBER and SCANS}
+  \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans.}
  }
 }
 \description{

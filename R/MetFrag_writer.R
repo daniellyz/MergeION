@@ -126,9 +126,12 @@ MetFrag_writer<-function(library,ppm_search = 20){
     if (metadata$ADDUCT[index_MS2]=="M-H"){
       mzn = mz + 1.007276
       pim = -1}
-    if (metadata$ADDUCT[index_MS2]=="M+cl"){
+    if (metadata$ADDUCT[index_MS2]=="M+Cl"){
       mzn = mz - 34.969401
       pim = 35}
+    if (metadata$ADDUCT[index_MS2]=="M+K"){
+      mzn = mz - 38.963158
+      pim = 39}
 
     index1 = which(grepl("NeutralPrecursorMass",param_lines))
     param_lines_new[index1] = paste0("NeutralPrecursorMass = ", mzn)

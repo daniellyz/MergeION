@@ -86,6 +86,7 @@ CSI_FingerID_writer<-function(library){
     if (metadata$ADDUCT[index_MS2]=="M-H"){.cat(">ionization [M-H]-","\n")}
     if (metadata$ADDUCT[index_MS2]=="M+Na"){.cat(">ionization [M+Na]+","\n")}
     if (metadata$ADDUCT[index_MS2]=="M+Cl"){.cat(">ionization [M+Cl]-","\n")}
+    if (metadata$ADDUCT[index_MS2]=="M+K"){.cat(">ionization [M+K]+","\n")}
 
     .cat(">parentmass ",metadata$PEPMASS[index_MS2],"\n")
     .cat("\n")
