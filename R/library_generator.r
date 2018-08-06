@@ -3,7 +3,7 @@
 #' The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData
 #'
 #' @param raw_data_files A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!
-#' @param metadata_file File name of the metadata. Must be a single character with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to find in chromatograms, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library).
+#' @param metadata_file File name of the metadata. Must be a single character with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library).
 #' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
@@ -83,6 +83,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   spectrum_list = list()
   metadata = c()
   NN = 0
+  unlink(output_library)
 
   ##############################
   ### Check function inputs:

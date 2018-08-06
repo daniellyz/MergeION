@@ -30,6 +30,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("
 
     dev_targets = sapply(ref$PEPMASS,function(x) min(abs(x-targets)))
     valid = which(dev_targets <= 1) #  Find targeted metadata in experimental file!!
+    ref = ref[valid,]
 
     if (nrow(ref)>0){
 
@@ -54,31 +55,35 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("
      # Find the scan that corresponds to the meta data
 
       tic_max=0
-      prec_intensity=10
       valid_k=0
 
       if (length(scan_range)>0){
         # Check scan by scan the masses:
         for (k in scan_range){
+
           Frag_data = MS2_Janssen[[k]]
 
-          if (MS2_type=="DDA"){
-            error=abs(Frag_data@precursorMz-prec_theo[i])/prec_theo[i]*1000000}
+          if (length(Frag_data@mz)>1){ # At least the scan is not empty
 
-          if (MS2_type=="Targeted"){
-            error= min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
-            prec_ind = which.min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
+             precursor_abundant = 1 # Whether the "precursor" found is abundant
 
-            # Make sure that the precursor mass detected in targeted mode must be at least 5 times higher than baseline!
-           if (Frag_data@intensity[prec_ind]<baseline*5) {
-             prec_intensity=0} else {prec_intensity=10}
-        }
+             if (MS2_type=="DDA"){
+                 error=abs(Frag_data@precursorMz-prec_theo[i])/prec_theo[i]*1000000}
+
+             if (MS2_type=="Targeted"){ # Some issues with certain instrument that targeted scans are badly labeled (not the real precursor)
+                 error= min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
+                 prec_ind = which.min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
+
+                 # Make sure that the precursor mass detected in targeted mode must be at least 5 times higher than baseline!
+                 if (Frag_data@intensity[prec_ind]<baseline*5) {
+                    precursor_abundant=0} else {precursor_abundant=1}
+             }
 
       # We now check whether the isolated scan is better than previous:
-          if ((error<=ppm_search) & MS2_tic[k]>tic_max & prec_intensity==10){
-            valid_k=k # Update the scan number
-            tic_max=MS2_tic[valid_k]}
-      }}
+            if ((error<=ppm_search) & MS2_tic[k]>tic_max & precursor_abundant==1){
+              valid_k=k # Update the scan number
+              tic_max=MS2_tic[valid_k]}
+      }}}
 
     if (valid_k==0){}
 

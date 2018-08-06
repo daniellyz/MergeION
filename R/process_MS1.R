@@ -47,6 +47,9 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,MS2_type = c("D
     if (length(scan_range)>0){
       for (k in scan_range){ # Check whether the precursor peak is detected
         Frag_data = MS1_Janssen[[k]]
+
+        if (length(Frag_data@mz)>1){ # At least the scan is not empty
+
         error = min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
         valid = which.min(abs(Frag_data@mz-prec_theo[i])/prec_theo[i]*1000000)
         int = Frag_data@intensity[valid] # Precursor intensity
@@ -55,7 +58,7 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,MS2_type = c("D
         if (error<=ppm_search & int>int_max){
           valid_k=k
           int_max=int}
-      }}
+      }}}
 
     if ((valid_k!=0) & (int_max > baseline*5)) { # If the scan is found and signal higher than 5 times of baseline
         scan_number = c(scan_number,valid_k)  # Save scan number
