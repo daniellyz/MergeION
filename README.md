@@ -44,7 +44,7 @@ Raw LC-MS/MS files must be in centroid/line spectra-mode and in mzML, mzXML or m
 
 If such function is not available in vendor software or user want to convert many raw files at the same time, we recommend an alternative solution with MSConvertGUI (part of proteowizard: http://proteowizard.sourceforge.net/download.html). The software is able to batch-convert raw chromatogram files of most vendors' formats into centroid-mode mzML or mzXML files. Following instructions are given for batch-conversion of profile-mode Bruker and Water's chromatograms:
 
-![choose](inst/MSConvert.png)
+![choose](inst/MSConvert.PNG)
 
 To test our package, please type following commands in Rstudio to download example datasets. More backgrounds of these datasets can be found at: https://zenodo.org/record/1326555.
 
