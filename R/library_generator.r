@@ -8,7 +8,7 @@
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
-#' @param baseline Numeric, the minimum intensity that is considered as a mass peak and written into the library
+#' @param baseline Numeric if all raw_dat_files have the same beseline intensity (the minimum intensity that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param consensus.algorithm Choice of algorithm to reduce spectral library size. "Highest": withholding the scan (MS1 and MS) with highest TIC for each ID; "Average_all" & "Average_clean": combining (m/z alignment) and averaging (intensity) all spectra that belong to the same ID, only work when spectra are normalized, for "Average_clean" only mass peaks present in all scans of the same ID are kept; "None": No filtering is applied.
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
@@ -46,7 +46,7 @@
 #' MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respectively
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
-#' baseline = 1000 # Noise level of mass spectra, can be determined using spectral visualizer such as MZMine
+#' baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
 #' consensus.algorithm = "None" # Currently we don't merge spectra with same ID
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
@@ -107,6 +107,12 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     if (length(MS2_type)!=FF){
       stop("The length of MS2_type must be the same as raw_data_files!")}}
 
+  if (length(baseline)==1){
+    baseline = rep(baseline,FF)
+  } else {
+    if (length(baseline)!=FF){
+      stop("The length of baseline must be the same as raw_data_files!")}}
+
   MS2_type = match.arg(MS2_type,choices=c("DDA","Targeted"),several.ok = TRUE)
   consensus.algorithm = match.arg(consensus.algorithm,choices=c("Highest","Average_all","Average_clean","None"))
 
@@ -124,7 +130,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   }
 
   if (input_library==output_library){
-      stop("The new library must be saved under a different name as the previous library!")
+    stop("The new library must be saved under a different name as the previous library!")
   }
 
   ####################################
@@ -142,6 +148,11 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   colnames(ref)[3]="IONMODE"
   colnames(ref)[4]="ADDUCT"
   colnames(ref)[5]="ID"
+
+  for (j in 1:ncol(ref)){  # Change column names to avoid duplicates
+    if (colnames(ref)[j] %in% c("FILENAME","MSLEVEL","TIC","PEPMASS_DEV","PEPMASS_DEV","SCAN_NUMBER","SCANS")){
+      colnames(ref)[j]=paste0(colnames(ref)[j],"_000")
+    }}
 
   if (ncol(ref)<5){
     stop("Metadata must contain at least 5 columns!")}
@@ -173,7 +184,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   for (ff in 1:FF){
 
     if (2 %in% mslevel){
-      dat2 = process_MS2(raw_data_files[ff],ref,rt_search,ppm_search, MS2_type[ff], baseline)
+      dat2 = process_MS2(raw_data_files[ff],ref,rt_search,ppm_search, MS2_type[ff], baseline[ff])
       LL2 = length(dat2$sp) # Added library size
       ref2 = dat2$ref_MS2 # Filter metadata data for MS1 searcch
       if (LL2>0){
@@ -183,7 +194,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
       }}
 
     if (1 %in% mslevel){
-      dat1 = process_MS1(raw_data_files[ff],ref2,rt_search,ppm_search, baseline)
+      dat1 = process_MS1(raw_data_files[ff],ref2,rt_search,ppm_search, baseline[ff])
       LL1= length(dat1$sp) # Added library size
       if (LL1>0){
         for (n in 1:LL1){spectrum_list[[NN+n]]=dat1$sp[[n]]} # Update spectrum list
@@ -253,4 +264,3 @@ writeMGF2 <- function(splist, metadata, con) {
     .cat("\nEND IONS\n")
   }
 }
-
