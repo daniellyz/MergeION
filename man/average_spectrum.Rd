@@ -17,5 +17,5 @@ average_spectrum(splist, ppm_window = 10, clean = F)
 new_spectrum ~ The aligned, (filtered) and averaged consensus spectra: data matrix with two columns (m/z and intensity)
 }
 \description{
-The function merge a list of normalized spectra that belong to the same ID
+Internal function that merges a list of normalized spectra that belong to the same ID
 }

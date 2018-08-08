@@ -59,7 +59,7 @@ download.file(paste0(url,original_files[3]),destfile="F3.mzXML")
 ```
 ## 5. Check spectra baseline
 
-Mass spectra show usually a baseline caused by chemical noise in matrix or by ion overloading. Users can define such baseline for each LC-MS/MS file so that only significant mass peaks are saved. Such filter can reduce spectral library size and improve chemical identification. The baselines can be roughly determined by visualizing MS1 scans. Data acquired on the same MS instrument usually have similar baseline levels.
+Mass spectra show usually a baseline caused by chemical noise in matrix or by ion overloading. Users can define such baseline for each LC-MS/MS file so that only significant mass peaks are saved. Such filter can reduce spectral library size and improve chemical identification. The baselines can be roughly determined by visualizing MS1 scans in vendor software or MZMine. Data acquired on the same MS instrument usually have similar baseline levels.
 
 ![choose](inst/base.png)
 
@@ -70,7 +70,7 @@ The metadata contains the metabolic features to be extracted from chromatogram(s
 ![choose](inst/meta.png)
 
 
-## Library generator
+## Generate a spectral library
 
 Now you will see an example of how a spectral library is built from two LC-MS/MS data:
 
@@ -87,10 +87,61 @@ MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respecti
 rt_search = 12 # Retention time tolerance (s)
 ppm_search = 10  # Mass tolerance (ppm)
 baseline = 1000  # Baseline level 1000 is fixed for both chromatograms
-consensus.algorithm = "None" # Currently we don't merge spectra with same ID
 input_library = "" # A brand new library, there's no previous dependency
 output_library = "library_V1.mgf" # Name of the library
 
 library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-       baseline,normalized = T, consensus.algorithm, input_library, output_library)
+       baseline, normalized = T, input_library, output_library)
 ```
+
+Two files are added in the working directory: 1) The library file "library_V1.mgf". The library format is inspired from GNPS database (https://gnps.ucsd.edu/ProteoSAFe/static/gnps-splash.jsp) and it consists of both metadata and spectra data. The "scans" are copies of MS1/MS2 spectra detected in raw LC-MS/MS files together with user-provided metadata. For MS1 scans, only the part of spectrum where isotopic patterns are located is saved. Segment of spectrum that contains fragments and precursor ion are saved for MS2 scans. Both MS1 and MS2 spectra are filtered according to baseline and can be normalized so that the highest the peak has intensity 100. The mgf file is compatible with GNPS search. 2) Metadata file "library_V1.mgf.txt", a tab-separated that can be read into a matrix in Excel. It contains metadata of all targeted scans (MS1 and MS2).  
+
+![choose](inst/library.png)
+
+## Update the spectral library
+
+How to add new data F3.mzXML in existing library:
+
+```R
+raw_data_files2 = "F3.mzXML" # The new LC-MS/MS data
+metadata_file2 = metadata_file # The targeted m/z is already written in input metadata
+MS2_type = "DDA" 
+input_library = "library_V1.mgf" # The first mgf file of library1
+output_library = "library_V2.mgf" # The name of the new spectral library
+
+library2 = library_generator(raw_data_files2, metadata_file2, mslevel, MS2_type, rt_search, ppm_search,
+       baseline, normalized = T, input_library, output_library)
+```
+## Visualize spectra
+
+Following function allows user visualize all detected scans of a metabolic feature by specifying its ID: 
+
+```R
+# We visualize ID = 28 (known as glutathion)
+visualize.spectra(library2,ID=28)
+# The same thing:
+visualize.spectra("library_V2.mgf",ID=28)
+```
+
+Two new files should appear in the working directory: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
+
+## Generate consensus library
+
+One metabolic feature can be detected more than once resulting in multiple scans for the same ID (e.g. detected in two chromatograms, multiple adduct types are detected...). The function process_library() keeps only two scans (one MS1 and one MS2) for each metabolic feature. It suggests three approaches:  
+
+```R
+# Approach 1: keeping the scan (MS1 and MS) with highest TIC for each ID:
+library2_1=process_library("library_V2.mgf", consensus=F, output_library="library_V2_0.mgf")
+
+# Approach 2: Combining all peaks that are present in at least one spectrum of the same ID. 
+library2_2=process_library("library_V2.mgf", consensus=T, ppm_window=10, output_library="library_V2_consensus.mgf")
+visualize.spectra(library2_2,ID=28)
+
+# Approach 3: Keeping only peaks that are present in all scans of the same ID.
+library2_3=process_library("library_V2.mgf", consensus=T, ppm_window=10, strict=T, output_library="library_V2_common.mgf")
+visualize.spectra("library_V2_common.mgf",ID=28)
+```
+Approaches 1 and 2 are achieved by the alignment of m/z across spectra and averaging intensity. Therefore, the spectra should be normalized. Metadata is saved for the scan with highest TIC. The new library is called "consensus library". Here is an example of glutathion scans in original and processed spectral libraries. There are two MS2 scans detected in original library2 (M+H and M+Na adduct types). The scan in library2_2 is the superposition of two scans, while library2_3 only keeps one mass peak that is present in both scans:
+
+![choose](inst/common.png)
+
