@@ -143,5 +143,5 @@ visualize.spectra("library_V2_common.mgf",ID=28)
 ```
 Approaches 1 and 2 are achieved by the alignment of m/z across spectra and averaging intensity. Therefore, the spectra should be normalized. Metadata is saved for the scan with highest TIC. The new library is called "consensus library". Here is an example of glutathion scans in original and processed spectral libraries. There are two MS2 scans detected in original library2 (M+H and M+Na adduct types). The scan in library2_2 is the superposition of two scans, while library2_3 only keeps one mass peak that is present in both scans:
 
-![choose](inst/common.png)
+![choose](inst/common1.png)
 
