@@ -8,6 +8,6 @@ Maintainer: Youzhong LIU <Youzhong.Liu@uantwerpen.be>
 Depends: R (>= 3.4.1)
 Imports: MSnbase, tools
 Description: In tandem mass spectrometry-based metabolomics, automated structure identification is usually performed by spectral library search and in silico fragmentation (smart algorithms). The missing steps towards complete automation are the pre-processing and format conversion of raw chromatograms. The package fills these gaps and enables batch-processing of targeted MS/MS scans on commonly used structure elucidation software, including CSI:FingerID, MSFinder, GNPS and Metfrag. To achieve this, scans from one or multiple raw chromatogram files are extracted according to m/z (and retention time) provided by users. They are then merged into a single "spectral library" along with user-provided metadata. The spectral library can be exported to formats compatible with different software tools.
-License: GPL2
+License: GPL-2
 LazyData: true
 RoxygenNote: 6.0.1

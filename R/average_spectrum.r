@@ -1,6 +1,6 @@
 #' Generating consensus spectra
 #'
-#' The function merge a list of normalized spectra that belong to the same ID
+#' Internal function that merges a list of normalized spectra that belong to the same ID
 #'
 #' @param splist List of extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity
 #' @param ppm_window  m/z tolerance window (in ppm) for spectra alignment
@@ -8,6 +8,10 @@
 #'
 #' @return
 #' new_spectrum ~ The aligned, (filtered) and averaged consensus spectra: data matrix with two columns (m/z and intensity)
+#'
+#' @export
+#'
+#' @importFrom stats cutree hclust as.dist
 
 average_spectrum<-function(splist, ppm_window = 10, clean = F){
 
@@ -64,7 +68,10 @@ average_spectrum<-function(splist, ppm_window = 10, clean = F){
 
   if (clean){ # Peak omni-present mass peaks
     kept = which(apply(I_matrix,1,function(x) all(x>0)))
-    new_spectrum = new_spectrum[kept]}
+    if (length(kept)>0){
+      new_spectrum = new_spectrum[kept,]
+      new_spectrum = matrix(new_spectrum,ncol=2)}
+    }
 
   new_spectrum[,2]=new_spectrum[,2]/max(new_spectrum[,2])*100 # Normalized again to be safe
 

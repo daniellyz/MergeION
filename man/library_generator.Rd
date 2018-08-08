@@ -6,13 +6,12 @@
 \usage{
 library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
   MS2_type = "DDA", rt_search = 12, ppm_search = 20, baseline = 1000,
-  normalized = T, consensus.algorithm = c("Highest", "Average_all",
-  "Average_clean", "None"), input_library = "", output_library = "")
+  normalized = T, input_library = "", output_library = "")
 }
 \arguments{
 \item{raw_data_files}{A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!}
 
-\item{metadata_file}{File name of the metadata. Must be a single character with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to find in chromatograms, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library).}
+\item{metadata_file}{File name of the metadata. Must be a single character with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library).}
 
 \item{mslevel}{Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !}
 
@@ -22,11 +21,9 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 
 \item{ppm_search}{m/z search tolerance (in ppm) for targeted m/z}
 
-\item{baseline}{Numeric, the minimum intensity that is considered as a mass peak and written into the library}
+\item{baseline}{Numeric if all raw_dat_files have the same beseline intensity (the minimum intensity that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))}
 
 \item{normalized}{Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100}
-
-\item{consensus.algorithm}{Choice of algorithm to reduce spectral library size. "Highest": withholding the scan (MS1 and MS) with highest TIC for each ID; "Average_all" & "Average_clean": combining (m/z alignment) and averaging (intensity) all spectra that belong to the same ID, only work when spectra are normalized, for "Average_clean" only mass peaks present in all scans of the same ID are kept; "None": No filtering is applied.}
 
 \item{input_library}{Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.}
 
@@ -34,8 +31,8 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 }
 \value{
 \itemize{
-  \item{"sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-  \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
+  \item{"library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
+  \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 }
@@ -64,24 +61,22 @@ mslevel = c(1,2)
 MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respectively
 rt_search = 12 # Retention time tolerance (s)
 ppm_search = 10  # Mass tolerance (ppm)
-baseline = 1000 # Noise level of mass spectra, can be determined using spectral visualizer such as MZMine
-consensus.algorithm = "None" # Currently we don't merge spectra with same ID
+baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
 input_library = "" # A brand new library, there's no previous dependency
 output_library = "library_V1.mgf" # Name of the library
 
 library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-      baseline,normalized = T, consensus.algorithm, input_library, output_library)
+      baseline,normalized = T, input_library, output_library)
 
 ### We added the targeted scans of F3.mzXML to spectral library version 2:
 
 raw_data_files = "F3.mzXML" # The new LC-MS/MS data
 MS2_type = "DDA"
-consensus.algorithm = "Average_all" # Currently we don't merge spectra with same ID
 input_library = "library_V1.mgf" # The first mgf file of library1
 output_library = "library_V2.mgf" # The name of the new spectral library
 
 library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-      baseline, normalized = T, consensus.algorithm, input_library, output_library)
+      baseline, normalized = T, input_library, output_library)
 
 ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 

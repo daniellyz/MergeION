@@ -10,14 +10,13 @@
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
 #' @param baseline Numeric if all raw_dat_files have the same beseline intensity (the minimum intensity that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
-#' @param consensus.algorithm Choice of algorithm to reduce spectral library size. "Highest": withholding the scan (MS1 and MS) with highest TIC for each ID; "Average_all" & "Average_clean": combining (m/z alignment) and averaging (intensity) all spectra that belong to the same ID, only work when spectra are normalized, for "Average_clean" only mass peaks present in all scans of the same ID are kept; "None": No filtering is applied.
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param output_library Name of the output library, the file extension must be mgf
 #'
 #' @return
 #' \itemize{
-#'   \item{"sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-#'   \item{"metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
+#'   \item{"library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
+#'   \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
 #'   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
 #'   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
@@ -47,23 +46,21 @@
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
 #' baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
-#' consensus.algorithm = "None" # Currently we don't merge spectra with same ID
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
 #' library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-#'       baseline,normalized = T, consensus.algorithm, input_library, output_library)
+#'       baseline,normalized = T, input_library, output_library)
 #'
 #' ### We added the targeted scans of F3.mzXML to spectral library version 2:
 #'
 #' raw_data_files = "F3.mzXML" # The new LC-MS/MS data
 #' MS2_type = "DDA"
-#' consensus.algorithm = "Average_all" # Currently we don't merge spectra with same ID
 #' input_library = "library_V1.mgf" # The first mgf file of library1
 #' output_library = "library_V2.mgf" # The name of the new spectral library
 #'
 #' library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-#'       baseline, normalized = T, consensus.algorithm, input_library, output_library)
+#'       baseline, normalized = T, input_library, output_library)
 #'
 #' ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 #'
@@ -74,7 +71,7 @@
 #' @importFrom utils write.table read.csv
 
 library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,
-                            baseline = 1000, normalized=T, consensus.algorithm=c("Highest","Average_all","Average_clean","None"),
+                            baseline = 1000, normalized=T,
                             input_library="", output_library=""){
 
   options(stringsAsFactors = FALSE)
@@ -114,11 +111,6 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
       stop("The length of baseline must be the same as raw_data_files!")}}
 
   MS2_type = match.arg(MS2_type,choices=c("DDA","Targeted"),several.ok = TRUE)
-  consensus.algorithm = match.arg(consensus.algorithm,choices=c("Highest","Average_all","Average_clean","None"))
-
-  if (!normalized & (consensus.algorithm %in% c("Average_all","Average_clean"))){
-    stop("Normalization is required for averaged consensus spectra generation!")
-  }
 
   if (input_library!=""){
     if (file_ext(input_library)!="mgf"){
@@ -133,9 +125,9 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     stop("The new library must be saved under a different name as the previous library!")
   }
 
-  ####################################
+  #######################################
   ### Read from metadata and old library:
-  ####################################
+  #######################################
 
   ref<-read.csv(metadata_file,sep=";",dec=".",header=T,stringsAsFactors = F)
   if (is.null(nrow(ref))){
@@ -143,6 +135,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     ref=data.frame(matrix(ref,nrow=1))
     colnames(ref)=labels}
 
+  ref[,5]=as.character(ref[,5]) # Make sure IDs are characters
   colnames(ref)[1]="PEPMASS"  # Make sure column name is correct!
   colnames(ref)[2]="RT"
   colnames(ref)[3]="IONMODE"
@@ -177,9 +170,9 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     NN = length(spectrum_list)
   }
 
-  ##############################
+  ##################
   ### Batch process:
-  ##############################
+  ##################
 
   for (ff in 1:FF){
 
@@ -201,30 +194,15 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
         metadata=rbind(metadata,dat1$metadata) # Update metadata
         NN=NN+LL1
       }}
-
   }
 
-  ##################################
-  ### Generating consensus library:
-  ##################################
-
-  if (consensus.algorithm=="Highest"){
-    library=process_library(spectrum_list,metadata, consensus=F)}
-
-  if (consensus.algorithm=="Average_all"){
-    library=process_library(spectrum_list,metadata, consensus=T, ppm_window = ppm_search, clean = F)}
-
-  if (consensus.algorithm=="Average_clean"){
-    library=process_library(spectrum_list,metadata, consensus=T, ppm_window = ppm_search, clean = T)}
-
-  if (consensus.algorithm=="None"){
-    library=list(sp=spectrum_list,metadata=metadata)}
-
-  library$metadata = cbind.data.frame(library$metadata,SCANS=1:nrow(library$metadata))
-
-  #####################################
+  ####################
   ### Return results:
-  #####################################
+  ####################
+
+  library = list()
+  library$sp = spectrum_list
+  library$metadata = cbind.data.frame(metadata,SCANS=1:nrow(metadata))
 
   writeMGF2(library$sp,library$metadata,output_library)
   write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
