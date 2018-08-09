@@ -112,6 +112,9 @@ output_library = "library_V2.mgf" # The name of the new spectral library
 library2 = library_generator(raw_data_files2, metadata_file2, mslevel, MS2_type, rt_search, ppm_search,
        baseline, normalized = T, input_library, output_library)
 ```
+
+Two new files should appear in the working directory: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
+
 ## Visualize spectra
 
 Following function allows user visualize all detected scans of a metabolic feature by specifying its ID: 
@@ -122,9 +125,6 @@ visualize.spectra(library2,ID=28)
 # The same thing:
 visualize.spectra("library_V2.mgf",ID=28)
 ```
-
-Two new files should appear in the working directory: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
-
 ## Generate consensus library
 
 One metabolic feature can be detected more than once resulting in multiple scans for the same ID (e.g. detected in two chromatograms, multiple adduct types are detected...). The function process_library() keeps only two scans (one MS1 and one MS2) for each metabolic feature. It suggests three approaches:  
