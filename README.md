@@ -148,7 +148,7 @@ To match fragment m/z to in-house reference library:
 ```R
 query_fragments = c(193.08,392.23,450.06)
 match.fragments("library_V2.mgf",query_fragments,match="All")
-```R
+```
 
 The function outputs IDs and scan numbers of all library items that contain query fragments. Moreover, reference mass spectra are visualized:
 
