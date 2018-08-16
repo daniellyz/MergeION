@@ -43,17 +43,6 @@ If such function is not available in vendor software or user want to convert man
 
 ![choose](inst/MSConvert.PNG)
 
-To test our package, please type following commands in Rstudio to download example datasets. More backgrounds of these datasets can be found at: https://zenodo.org/record/1326555.
-
-```R
-url = "https://zenodo.org/record/1326555/files/"
-original_files = c("TESTMIX2_180504_MAS011_06.mzXML",
-                    "JNJ42165279_171214_MAS006_14.mzXML",
-                    "GMP_R601592_150925_MAS006_04.mzXML")
-download.file(paste0(url,original_files[1]),destfile="F1.mzXML") # Download and rename the files
-download.file(paste0(url,original_files[2]),destfile="F2.mzXML")
-download.file(paste0(url,original_files[3]),destfile="F3.mzXML")
-```
 ## 5. Check spectra baseline
 
 Mass spectra show usually a baseline caused by chemical noise in matrix or by ion overloading. Users can define such baseline for each LC-MS/MS file so that only significant mass peaks are saved. Such filter can reduce spectral library size and improve chemical identification. The baselines can be roughly determined by visualizing MS1 scans in vendor software or MZMine. Data acquired on the same MS instrument usually have similar baseline levels.
@@ -69,12 +58,21 @@ The metadata contains the metabolic features to be extracted from chromatogram(s
 
 ## Example 1: generating an in-house spectral library of drug standards
 
-An example of how a spectral library is built from two LC-MS/MS data:
+To test our package with example 1, please type following commands in Rstudio to download raw datasets. More backgrounds of these datasets can be found at: https://zenodo.org/record/1326555.
+
+```R
+url = "https://zenodo.org/record/1326555/files/"
+original_files = c("TESTMIX2_180504_MAS011_06.mzXML",
+                    "JNJ42165279_171214_MAS006_14.mzXML",
+                    "GMP_R601592_150925_MAS006_04.mzXML")
+download.file(paste0(url,original_files[1]),destfile="F1.mzXML") # Download and rename the files
+download.file(paste0(url,original_files[2]),destfile="F2.mzXML")
+download.file(paste0(url,original_files[3]),destfile="F3.mzXML")
+```
+To start building our spectral library, please type:
 
 ```R
 raw_data_files = c("F1.mzXML","F2.mzXML")
-
-url = "https://zenodo.org/record/1326555/files/"
 metadata_file = paste0(url,"library_metadata.csv")
 
 mslevel = c(1,2)  # Both MS1 and MS2 scans are extracted! 
