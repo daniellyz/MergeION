@@ -1,10 +1,7 @@
 # MergeION: Batch processing of LC-MS/MS chromatograms into a spectral library
 
-In tandem mass spectrometry-based metabolomics, automated structure identification is usually performed by spectral library search and in silico fragmentation (smart algorithms).
-The missing steps towards complete automation are the pre-processing and format conversion of raw chromatograms acquired in DDA (Data-driven acquisition) or targeted MS/MS-mode. 
-The package fills these gaps and enables batch-processing of selected MS/MS scans on commonly used structure elucidation software, including CSI:FingerID, MSFinder, GNPS and Metfrag. 
-To achieve this, MS/MS scans from one or multiple raw chromatogram files are extracted according to m/z (and retention time) provided by users. 
-They are then merged into a single "spectral library" and can be exported to different formats compatible with different software tools. Users can also use this package to build their own spectral library by adding metadata. The following pipelin shows the key steps achieved by the package:
+In tandem mass spectrometry-based metabolomics, automated structure identification is usually performed by spectral library search and in silico fragmentation (smart algorithms). For both approaches, the missing steps towards automation are the pre-processing and format conversion of raw chromatograms acquired in DDA (Data-driven acquisition) or targeted MS/MS-mode. As for, following steps are usually performed chromatogram by chromatogram, spectrum by spectrum in vendor software & text editors: selecting MS/MS scans, processing spectra, copying them along with metadata (e.g.ion mode, compound name...) into in-house database (for chemical standards) or structure identification software (for unknowns). Our package fills these gaps and enables: i) automated spectral library generation; ii) batch-processing LC-MS/MS data on commonly used structure elucidation software (CSI:FingerID, MSFinder, GNPS and Metfrag).  
+MS1 and MS2 scans from one or multiple raw chromatogram files are first extracted according to m/z (and retention time) provided by users. They are then merged into a GNPS-style spectral library and can be later converted to formats compatible with different software tools. The following pipeline shows the key steps achieved by the package:
 
 ![choose](inst/workflow.png)
 
@@ -70,9 +67,9 @@ The metadata contains the metabolic features to be extracted from chromatogram(s
 ![choose](inst/meta.png)
 
 
-## Generate a spectral library
+## Example 1: generating an in-house spectral library of drug standards
 
-Now you will see an example of how a spectral library is built from two LC-MS/MS data:
+An example of how a spectral library is built from two LC-MS/MS data:
 
 ```R
 raw_data_files = c("F1.mzXML","F2.mzXML")
@@ -80,8 +77,7 @@ raw_data_files = c("F1.mzXML","F2.mzXML")
 url = "https://zenodo.org/record/1326555/files/"
 metadata_file = paste0(url,"library_metadata.csv")
 
-mslevel = c(1,2) 
-# Both MS1 and MS2 scans are extracted! MS1 scan contains isotopic pattern of targeted m/z and can improve identification
+mslevel = c(1,2)  # Both MS1 and MS2 scans are extracted! 
 
 MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respectively
 rt_search = 12 # Retention time tolerance (s)
@@ -94,13 +90,13 @@ library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, r
        baseline, normalized = T, input_library, output_library)
 ```
 
-Two files are added in the working directory: 1) The library file "library_V1.mgf". The library format is inspired from GNPS database (https://gnps.ucsd.edu/ProteoSAFe/static/gnps-splash.jsp) and it consists of both metadata and spectra data. The "scans" are copies of MS1/MS2 spectra detected in raw LC-MS/MS files together with user-provided metadata. For MS1 scans, only the part of spectrum where isotopic patterns are located is saved. Segment of spectrum that contains fragments and precursor ion are saved for MS2 scans. Both MS1 and MS2 spectra are filtered according to baseline and can be normalized so that the highest the peak has intensity 100. The mgf file is compatible with GNPS search. 2) Metadata file "library_V1.mgf.txt", a tab-separated that can be read into a matrix in Excel. It contains metadata of all targeted scans (MS1 and MS2).  
+Two files are added in the working directory: 1) The library file "library_V1.mgf". The library format is inspired from GNPS database (https://gnps.ucsd.edu/ProteoSAFe/static/gnps-splash.jsp) and it consists of both metadata and spectra data. The "scans" are copies of MS1/MS2 spectra detected in raw LC-MS/MS files together with user-provided metadata. For MS1 scans, only the part of spectrum where isotopic patterns are located is saved. Segment of spectrum that contains fragments and precursor ion are saved for MS2 scans. Both MS1 and MS2 spectra are filtered according to baseline and can be normalized so that the highest the peak has an intensity of 100. 2) Metadata file "library_V1.mgf.txt", a tab-separated that can be read into a matrix in Excel. It contains metadata of all targeted scans (MS1 and MS2) with additional information:  
 
 ![choose](inst/library.png)
 
-## Update the spectral library
+### Update the spectral library
 
-How to add new data F3.mzXML in existing library:
+Now we add a new data F3.mzXML in existing library:
 
 ```R
 raw_data_files2 = "F3.mzXML" # The new LC-MS/MS data
@@ -115,7 +111,7 @@ library2 = library_generator(raw_data_files2, metadata_file2, mslevel, MS2_type,
 
 Two new files should appear in the working directory: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
 
-## Visualize spectra
+### Visualize spectra
 
 Following function allows user visualize all detected scans of a metabolic feature by specifying its ID: 
 
@@ -125,7 +121,7 @@ visualize.spectra(library2,ID=28)
 # The same thing:
 visualize.spectra("library_V2.mgf",ID=28)
 ```
-## Generate consensus library
+### Generate consensus library
 
 One metabolic feature can be detected more than once resulting in multiple scans for the same ID (e.g. detected in two chromatograms, multiple adduct types are detected...). The function process_library() keeps only two scans (one MS1 and one MS2) for each metabolic feature. It suggests three approaches:  
 
@@ -144,4 +140,17 @@ visualize.spectra("library_V2_common.mgf",ID=28)
 Approaches 2 and 3 are achieved by the alignment of m/z across spectra and averaging intensity. Therefore, the spectra should be normalized. Metadata is saved for the scan with highest TIC. The new library is called "consensus library". Here is an example of glutathion scans in original and processed spectral libraries. There are two MS2 scans detected in original library2 (M+H and M+Na adduct types). The scan in library2_2 is the superposition of two scans, while library2_3 only keeps one mass peak that is present in both scans:
 
 ![choose](inst/common1.png)
+
+### Search fragments in the library
+
+To match fragment m/z to in-house reference library:
+
+```R
+query_fragments = c(193.08,392.23,450.06)
+match.fragments("library_V2.mgf",query_fragments,match="All")
+```R
+
+The function outputs IDs and scan numbers of all library items that contain query fragments. Moreover, reference mass spectra are visualized:
+
+![choose](inst/search.png)
 

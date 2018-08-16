@@ -187,6 +187,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
       }}
 
     if (1 %in% mslevel){
+      if (!(2 %in% mslevel)){ref2=ref}
       dat1 = process_MS1(raw_data_files[ff],ref2,rt_search,ppm_search, baseline[ff])
       LL1= length(dat1$sp) # Added library size
       if (LL1>0){
