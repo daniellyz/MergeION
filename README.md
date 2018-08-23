@@ -22,7 +22,7 @@ install.packages("devtools")
 
 ```R
 library(devtools)
-install_github("daniellyz/MergeION")
+install_github("daniellyz/MergeION", build_vignettes = TRUE)
 library(MergeION)
 ```
 

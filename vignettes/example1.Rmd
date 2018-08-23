@@ -13,7 +13,7 @@ vignette: >
 BiocStyle::markdown() 
 ```
 
-### Introduction
+# Introduction
 
 The datasets for Example 1 are provided by Janssen Pharmaceutica. It consists of known standard pharmaceutical compounds for which high quality Q-Exactive MS/MS data is provided. Names and structures of these compounds can be found in the metadata. All datasets were acquired in positive ion mode through either DDA (data-dependent acquisition) or targeted MS/MS. Raw data in profile mode were converted into centroid-mode mzML or mzXML files using MSConvertGUI. Please type following commands in Rstudio to download raw datasets.
 
@@ -26,7 +26,7 @@ download.file(paste0(url,original_files[1]),destfile="F1.mzXML") # Download and 
 download.file(paste0(url,original_files[2]),destfile="F2.mzXML")
 download.file(paste0(url,original_files[3]),destfile="F3.mzXML")
 ```
-To start building our spectral library, please type:
+# Building the first spectral library
 
 ```R
 raw_data_files = c("F1.mzXML","F2.mzXML")
@@ -49,7 +49,7 @@ Two files are added in the working directory: 1) The library file "library_V1.mg
 
 ![choose](library.png)
 
-### Update the spectral library
+# Update the spectral library
 
 Now we add a new data F3.mzXML in existing library:
 
@@ -66,7 +66,7 @@ library2 = library_generator(raw_data_files2, metadata_file2, mslevel, MS2_type,
 
 Two new files should appear in the working directory: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
 
-### Visualize spectra
+# Visualize spectra in the library
 
 Following function allows user visualize all detected scans of a metabolic feature by specifying its ID: 
 
@@ -76,7 +76,7 @@ visualize.spectra(library2,ID=28)
 # The same thing:
 visualize.spectra("library_V2.mgf",ID=28)
 ```
-### Generate consensus library
+# Generate consensus library
 
 One metabolic feature can be detected more than once resulting in multiple scans for the same ID (e.g. detected in two chromatograms, multiple adduct types are detected...). The function process_library() keeps only two scans (one MS1 and one MS2) for each metabolic feature. It suggests three approaches:  
 
@@ -96,7 +96,7 @@ Approaches 2 and 3 are achieved by the alignment of m/z across spectra and avera
 
 ![choose](common1.png)
 
-### Search fragments in the library
+# Search fragments in the library
 
 To match fragment m/z to in-house reference library:
 
