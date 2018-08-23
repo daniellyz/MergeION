@@ -52,8 +52,8 @@ It must be a semicolon-separated .csv file where each row represents a targeted 
 
 ## Example 1: generating an in-house spectral library of drug standards
 
-Please visit https://github.com/daniellyz/MergeION/blob/master/vignettes/example1.Rmd or type:
+Please type and select Example 1:
 
 ```R
-vignette("example1"")
+browseVignettes("MergeION")
 ```
