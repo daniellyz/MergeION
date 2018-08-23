@@ -3,7 +3,7 @@
 #' The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData
 #'
 #' @param raw_data_files A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!
-#' @param metadata_file File name of the metadata. Must be a single character with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library).
+#' @param metadata_file A single character or NULL (not recommended). If provided, it must be the metadata file name with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library). If missing or NULL, a non-targeted feature screening will be performed using MatchedFilter from XCMS. In current release, this functionality only works when all input files are acquired on the same instrument and from the same ion mode, and they must all contain MS1 scans. Please be aware that non-targeted screening can lead to loss of important features or unwanted peaks (e.g. noise).
 #' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
@@ -92,8 +92,11 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   if (!all(file_ext(raw_data_files) %in% c("mzML","mzXML","mzData"))){
     stop("Chromatogram files must be in mzML, mzXML or mzData format!")}
 
-  if (missing(metadata_file) || (!is.character(metadata_file)) || (length(metadata_file)!=1) || file_ext(metadata_file)!="csv"){
-    stop("Metadata must be written in one single csv!")}
+  if (!missing(metadata_file) & (!is.null(metadata_file))){
+    if ((!is.character(metadata_file)) || (length(metadata_file)!=1) || file_ext(metadata_file)!="csv"){
+    stop("Metadata must be written in one single csv!")
+    } else {
+    ref<-read.csv(metadata_file,sep=";",dec=".",header=T,stringsAsFactors = F)}}
 
   if (!all(mslevel %in% c(1,2))){
     stop("mslevel must be 1 or 2!")}
@@ -125,12 +128,24 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     stop("The new library must be saved under a different name as the previous library!")
   }
 
+  if (missing(metadata_file) || is.null(metadata_file)){
+    is_positive = menu(c("Positive", "Negative", "Partially positive"), title="Polarity of your input files?")
+    if (is_positive==1){polarity = "positive"}
+    if (is_positive==2){polarity = "negative"}
+    if (is_positive==3){
+      stop("Automated M1 Peak detection not possible with mixed ion mode in current release! All input files must be the same ion mode or please provide metadatafile!")
+    }
+    print("Starting M1 peak dection across all files!")
+    ref <- try(MS1_screener(raw_data_files, polarity), silent=T)
+    if (class(ref) == "try-error"){
+      stop("Automated M1 Peak detection failed! It's possible that certain data files don't contain MS1 scans! Please provide metadata file!")
+    }}
+
   #######################################
   ### Read from metadata and old library:
   #######################################
 
-  ref<-read.csv(metadata_file,sep=";",dec=".",header=T,stringsAsFactors = F)
-  if (is.null(nrow(ref))){
+  if (is.null(nrow(ref))){ # Only one row...
     labels=names(ref)
     ref=data.frame(matrix(ref,nrow=1))
     colnames(ref)=labels}

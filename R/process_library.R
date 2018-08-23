@@ -30,6 +30,9 @@
 
 process_library<-function(library, consensus = T, ppm_window = 10, strict = F, output_library=""){
 
+  options(stringsAsFactors = FALSE)
+  options(warn=-1)
+
   #################
   ### Check inputs:
   #################
