@@ -1,6 +1,6 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
+title: "Example 1: generating an in-house spectral library of drug standards"
+author: "Youzhong LIU"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -9,17 +9,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+```{r  biocstyle, echo = FALSE, results = "asis" }
+BiocStyle::markdown() 
 ```
 
+### Introduction
 
-## Example 1: generating an in-house spectral library of drug standards
-
-To test our package with example 1, please type following commands in Rstudio to download raw datasets. More backgrounds of these datasets can be found at: https://zenodo.org/record/1326555.
+The datasets for Example 1 are provided by Janssen Pharmaceutica. It consists of known standard pharmaceutical compounds for which high quality Q-Exactive MS/MS data is provided. Names and structures of these compounds can be found in the metadata. All datasets were acquired in positive ion mode through either DDA (data-dependent acquisition) or targeted MS/MS. Raw data in profile mode were converted into centroid-mode mzML or mzXML files using MSConvertGUI. Please type following commands in Rstudio to download raw datasets.
 
 ```R
 url = "https://zenodo.org/record/1326555/files/"
@@ -51,7 +47,7 @@ library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, r
 
 Two files are added in the working directory: 1) The library file "library_V1.mgf". The library format is inspired from GNPS database (https://gnps.ucsd.edu/ProteoSAFe/static/gnps-splash.jsp) and it consists of both metadata and spectra data. The "scans" are copies of MS1/MS2 spectra detected in raw LC-MS/MS files together with user-provided metadata. For MS1 scans, only the part of spectrum where isotopic patterns are located is saved. Segment of spectrum that contains fragments and precursor ion are saved for MS2 scans. Both MS1 and MS2 spectra are filtered according to baseline and can be normalized so that the highest the peak has an intensity of 100. 2) Metadata file "library_V1.mgf.txt", a tab-separated that can be read into a matrix in Excel. It contains metadata of all targeted scans (MS1 and MS2) with additional information:  
 
-![choose](inst/library.png)
+![choose](library.png)
 
 ### Update the spectral library
 
@@ -98,7 +94,7 @@ visualize.spectra("library_V2_common.mgf",ID=28)
 ```
 Approaches 2 and 3 are achieved by the alignment of m/z across spectra and averaging intensity. Therefore, the spectra should be normalized. Metadata is saved for the scan with highest TIC. The new library is called "consensus library". Here is an example of glutathion scans in original and processed spectral libraries. There are two MS2 scans detected in original library2 (M+H and M+Na adduct types). The scan in library2_2 is the superposition of two scans, while library2_3 only keeps one mass peak that is present in both scans:
 
-![choose](inst/common1.png)
+![choose](common1.png)
 
 ### Search fragments in the library
 
@@ -111,6 +107,6 @@ match.fragments("library_V2.mgf",query_fragments,match="All")
 
 The function outputs IDs and scan numbers of all library items that contain query fragments. Moreover, reference mass spectra are visualized:
 
-![choose](inst/search.png)
+![choose](search.png)
 
 

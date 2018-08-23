@@ -44,6 +44,16 @@ Mass spectra show usually a baseline caused by chemical noise in matrix or by io
 
 ## 5. Preparation of metadata
 
-The metadata contains the metabolic features to be extracted from chromatogram(s). It must be a semicolon-separated .csv file where each row represents a targeted metabolic feature (PEPMASS, RT, IONMODE, ADDUCT and ID). Other information of metabolic feature can be added and will be found in the final merged library. A single metadata should be used for batch-processing the list of chromatogram files. The example metadata can be downloaded at https://zenodo.org/record/1326555:
+The metadata contains the metabolic features to be extracted from chromatogram(s) and it is strongly recommended 
+
+It must be a semicolon-separated .csv file where each row represents a targeted metabolic feature (PEPMASS, RT, IONMODE, ADDUCT and ID). Other information of metabolic feature can be added and will be found in the final merged library. A single metadata should be used for batch-processing the list of chromatogram files. The example metadata can be downloaded at https://zenodo.org/record/1326555:
 
 ![choose](inst/meta.png)
+
+## Example 1: generating an in-house spectral library of drug standards
+
+Please visit https://github.com/daniellyz/MergeION/blob/master/vignettes/example1.Rmd or type:
+
+```R
+vignette("example1"")
+```

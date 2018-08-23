@@ -38,7 +38,7 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 }
 }
 \description{
-The function picks up scans according to m/z (and retention time) specified in the metadata and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData
+The function picks up targeted MS1/MS2 scans and merge them into a spcetral library (new or existing). The raw LC-MS/MS files must be centroid-mode mzML, mzMXL or mzData. Ions are selected based on m/z (and retention time) specified in the metadata (recommended) or by automatic peak picking in XCMS package.
 }
 \examples{
 ### We download our three test data sets:
