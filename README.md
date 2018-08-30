@@ -21,6 +21,10 @@ install.packages("devtools")
 ## 2. Installation from Github in Rstudio (with devtools)
 
 ```R
+source("http://bioconductor.org/biocLite.R")
+biocLite("MSnbase") # Install dependencies
+biocLite("xcms")
+biocLite("BiocStyle")
 library(devtools)
 install_github("daniellyz/MergeION", build_vignettes = TRUE)
 library(MergeION)
@@ -52,8 +56,17 @@ It must be a semicolon-separated .csv file where each row represents a targeted 
 
 ## Example 1: generating an in-house spectral library of drug standards
 
-Please type and select Example 1:
+Please type and select html of Example 1:
 
 ```R
 browseVignettes("MergeION")
 ```
+
+## Example 2: chemical identification of urine and beer metabolites
+
+Please type and select html of Example 2:
+
+```R
+browseVignettes("MergeION")
+```
+
