@@ -9,6 +9,7 @@
 #'
 #' @importFrom tools file_ext
 #' @importFrom MSnbase fData readMgfData
+#' @importFrom stringr str_replace_all
 #' @export
 
 MSFinder_writer<-function(library){
@@ -74,7 +75,8 @@ MSFinder_writer<-function(library){
   for (i in 1:N){
 
     id=ID_list[i]
-    con <- file(description = paste0(id,".mat"), open = "w")
+    id2=str_replace_all(id, "[^[:alnum:]]", "_")
+    con <- file(description = paste0(id2,".mat"), open = "w")
     on.exit(close(con))
 
     index_MS1 = which(metadata$ID == id & metadata$MSLEVEL == "1")

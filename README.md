@@ -7,30 +7,18 @@ MS1 and MS2 scans from one or multiple raw chromatogram files are first extracte
 
 Following steps need to be performed before using this package:
 
-## 1. Install devtools (only if it has not been installed)
-
-Make sure you have a valid working development environment:
-* Windows: please install Rtools at https://cran.r-project.org/bin/windows/Rtools/
-* Mac: Install Xcode from the Mac App Store.
-* Linux: Install a compiler and various development libraries (details vary across different flavors of Linux).
+## 1. Installation from Github in Rstudio
 
 ```R
-install.packages("devtools")
+# Install BiocManager if it has not been installed previously:
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+
+# Install MergeION:
+BiocManager::install("daniellyz/MergeION")
 ```
 
-## 2. Installation from Github in Rstudio (with devtools)
-
-```R
-source("http://bioconductor.org/biocLite.R")
-biocLite("MSnbase") # Install dependencies
-biocLite("xcms")
-biocLite("BiocStyle")
-library(devtools)
-install_github("daniellyz/MergeION", build_vignettes = TRUE)
-library(MergeION)
-```
-
-## 3. Data format conversion
+## 2. Data format conversion
 
 Raw LC-MS/MS files must be in centroid/line spectra-mode and in mzML, mzXML or mzData format. Such files can be usually exported from LC-MS vendor software, e.g. with Bruker Compass DataAnalysis 4.3:
 
@@ -40,15 +28,15 @@ If such function is not available in vendor software or user want to convert man
 
 ![choose](inst/MSConvert.PNG)
 
-## 4. Check spectra baseline
+## 3. Check spectra baseline
 
 Mass spectra show usually a baseline caused by chemical noise in matrix or by ion overloading. Users can define such baseline for each LC-MS/MS file so that only significant mass peaks are saved. Such filter can reduce spectral library size and improve chemical identification. The baselines can be roughly determined by visualizing MS1 scans in vendor software or MZMine. Data acquired on the same MS instrument usually have similar baseline levels.
 
 ![choose](inst/base.png)
 
-## 5. Preparation of metadata
+## 4. Preparation of metadata
 
-The metadata contains the metabolic features to be extracted from chromatogram(s) and it is strongly recommended 
+The metadata contains the metabolic features to be extracted from chromatogram(s) and it is strongly recommended. 
 
 It must be a semicolon-separated .csv file where each row represents a targeted metabolic feature (PEPMASS, RT, IONMODE, ADDUCT and ID). Other information of metabolic feature can be added and will be found in the final merged library. A single metadata should be used for batch-processing the list of chromatogram files. The example metadata can be downloaded at https://zenodo.org/record/1326555:
 

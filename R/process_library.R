@@ -138,7 +138,7 @@ process_library<-function(library, consensus = T, ppm_window = 10, strict = F, o
   library$sp = new_spectrum_list
   library$metadata = new_meta_data
 
-  writeMGF2(library$sp,library$metadata,output_library)
+ # writeMGF2(library$sp,library$metadata,output_library)
   write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
   return(library)
 }

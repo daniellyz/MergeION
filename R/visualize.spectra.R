@@ -21,6 +21,7 @@ visualize.spectra<-function(library, ID = NULL, mslevel=c(1,2), scan = NULL){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
+  max_display = 10 # Display text of 5 most abundant mass peaks
 
   #################
   ### Check inputs:
@@ -76,8 +77,15 @@ visualize.spectra<-function(library, ID = NULL, mslevel=c(1,2), scan = NULL){
         xrange = c(60,prec_mz+10)
         yrange = c(0, max(spectrum[,2])*1.2)}
       plot(spectrum[,1],spectrum[,2], type = "h", xlim = xrange, ylim = yrange,
-           xlab = "m/z", ylab = "Intensity",  font.lab=2 )
-      title(paste0("ID: ",metadata$ID[ind]))
+           xlab = "m/z", ylab = "Intensity", font.lab=2)
+
+      kkk = min(length(spectrum[,1]), max_display)
+      max_pics = order(spectrum[,2], decreasing = T)[1:kkk]
+      text_pics = spectrum[max_pics,1]
+      int_pics = spectrum[max_pics,2]*1.1
+      text(text_pics, int_pics, as.character(round(text_pics,3)))
+
+      #title(paste0("ID: ",metadata$ID[ind]))
       legend("topleft", bty = "n",
              legend = paste0(
                "Precursor: ", prec_mz,  "\n",

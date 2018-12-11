@@ -11,6 +11,7 @@
 #' @importFrom tools file_ext
 #' @importFrom MSnbase fData readMgfData
 #' @importFrom utils download.file
+#' @importFrom stringr str_replace_all
 #' @export
 
 MetFrag_writer<-function(library,ppm_search = 20){
@@ -89,6 +90,8 @@ MetFrag_writer<-function(library,ppm_search = 20){
   for (i in 1:N){
 
     id=ID_list[i]
+    id2=str_replace_all(id, "[^[:alnum:]]", "_")
+
     index_MS1 = which(metadata$ID == id & metadata$MSLEVEL == "1")
     index_MS2 = which(metadata$ID == id & metadata$MSLEVEL == "2")
 
@@ -96,7 +99,7 @@ MetFrag_writer<-function(library,ppm_search = 20){
     ###  Writing MS2 spectrum data as .txt:
     #########################################
 
-    spectrum_file = paste0(id,"_spectrum.txt")
+    spectrum_file = paste0(id2,"_spectrum.txt")
     spectrum=spectrum_list[[index_MS2]]
     spectrum=spectrum[order(spectrum[,1]),]
     write.table(spectrum,spectrum_file,sep="\t",dec=".",col.names = F,row.names = F)
@@ -105,7 +108,7 @@ MetFrag_writer<-function(library,ppm_search = 20){
     ###  Writing parameter files:
     ##############################
 
-    param_file = paste0(id,"_param.txt")
+    param_file = paste0(id2,"_param.txt")
     param_con <- file(param_file,open="w")
     param_lines_new = param_lines
 

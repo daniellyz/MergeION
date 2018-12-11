@@ -97,6 +97,7 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,MS2_type = c("D
       dat = cbind(MS1_scan_list[[i]]@mz,MS1_scan_list[[i]]@intensity)
       # Filter background noise and choose only peaks until +7Da of the precursor!!
       selected = which(dat[,1]>new_MS1_meta_data$PEPMASS[i]-0.5 & dat[,1] < new_MS1_meta_data$PEPMASS[i]+7 & dat[,2]>baseline)
+
       if (length(selected)>1){ # At least 2 peaks should be present for isotope determination
         dat = dat[selected,]
         dat = matrix(dat,ncol=2)

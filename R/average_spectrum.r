@@ -73,6 +73,7 @@ average_spectrum<-function(splist, ppm_window = 10, clean = F){
       new_spectrum = matrix(new_spectrum,ncol=2)}
     }
 
+  write.table(I_matrix,"I_matrix.txt",col.names=F,row.names=F,sep="\t",dec=".")
   new_spectrum[,2]=new_spectrum[,2]/max(new_spectrum[,2])*100 # Normalized again to be safe
 
   return(new_spectrum)
