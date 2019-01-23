@@ -46,13 +46,11 @@ visualize.spectra<-function(library, ID = NULL, mslevel=c(1,2), scan = NULL){
   ### Reading from spectral library:
   #####################################
 
-  if (is.character(library)){ # If input is a mgf file
-    library=readMgfData(library, verbose = FALSE)
-    metadata=fData(library)
-    spectrum_list=Mgf2Splist(library)
-  } else { # If input is the output of library_generator
-    metadata = library$metadata
-    spectrum_list = library$sp}
+  if (is.character(library)){ # If input is a mgf file name
+    library=readMGF2(library)}
+
+  metadata = library$metadata
+  spectrum_list = library$sp
 
   ###########
   ### Plots:
@@ -97,16 +95,3 @@ visualize.spectra<-function(library, ID = NULL, mslevel=c(1,2), scan = NULL){
      print("No scans available for ID specified!")
     }
   }
-
-############################
-### Internal functions:
-###########################
-
-Mgf2Splist<-function(MGFdat){
-
-  # From a MSnBase object to a list of spectra m/z intensity
-  N=length(MGFdat)
-  spectrum_list=list()
-  for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
-  return(spectrum_list)
-}

@@ -12,7 +12,7 @@
 #' @importFrom stringr str_replace_all
 #' @export
 
-CSI_FingerID_writer<-function(library){
+CSI_FingerID_writer<-function(library, ppm_search = 20, instrument = c("qtof", "orbitrap", "fticr"), process = TRUE){
 
   #####################################
   ### Preparations before writing:
@@ -53,27 +53,25 @@ CSI_FingerID_writer<-function(library){
   ### Reading from spectral library:
   #####################################
 
-  if (is.character(library)){ # If input is a mgf file
-    library=readMgfData(library, verbose = FALSE)
-    metadata=fData(library)
-    spectrum_list=Mgf2Splist(library)
-  } else { # If input is the output of library_generator
-    metadata = library$metadata
-    spectrum_list = library$sp}
+  if (is.character(library)){ # If input is a mgf file name
+    library=readMGF2(library)}
+
+  metadata = library$metadata
+  spectrum_list = library$sp
 
   index2=which(metadata$MSLEVEL=="2")
   metadata2 = metadata[index2,]
   ID_list=unique(metadata2$ID) # We only take IDs where MS2 data is present
   N = length(ID_list) # Number of items
+  setwd(file.path(mainDir, subDir))
 
   ############################################
   ### Write mat file for each item in ID_list:
   ############################################
 
-  setwd(file.path(mainDir, subDir))
-
   for (i in 1:N){
 
+    print(i)
     id=ID_list[i]
     id2=str_replace_all(id, "[^[:alnum:]]", "_")
     con <- file(description = paste0(id2,".ms"), open = "w")
@@ -111,6 +109,24 @@ CSI_FingerID_writer<-function(library){
     .cat(paste(sp2[,1]," ",sp2[,2], collapse = "\n"))
     .cat("\n")
 
+  if (process){
+    if (instrument=="qtof"){basic="sirius-console-64 -p qtof"}
+    if (instrument=="orbitrap"){basic="sirius-console-64 -p orbitrap"}
+    if (instrument=="fticr"){basic="sirius-console-64 -p fticr"}
+
+    candidates = "-c 50"
+    output = paste0("-o ",getwd(),"/dotfiles/",id2,".dot")
+    #output_format = "--format dot"
+    database = "-d pubchem"
+    elements="-e CHNOPSCl[5]Br[5]F[5]"
+    max_ppm=paste0("--ppm-max ",ppm_search)
+
+    input=paste0(getwd(),"/",id2,".ms")
+
+    command=paste(basic,"-F",output, candidates,database,elements, max_ppm,input,collapse = " ")
+    print(command)
+    system(command, timeout = 600)
+   }
     #try(close(con),silent=T)
   }
 
@@ -119,17 +135,4 @@ CSI_FingerID_writer<-function(library){
   print(paste(ms_files,collapse=","))
 
   setwd(file.path(mainDir))
-}
-
-############################
-### Internal functions:
-###########################
-
-Mgf2Splist<-function(MGFdat){
-
-  # From a MSnBase object to a list of spectra m/z intensity
-  N=length(MGFdat)
-  spectrum_list=list()
-  for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
-  return(spectrum_list)
 }

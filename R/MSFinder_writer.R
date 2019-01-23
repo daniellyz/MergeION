@@ -12,7 +12,7 @@
 #' @importFrom stringr str_replace_all
 #' @export
 
-MSFinder_writer<-function(library){
+MSFinder_writer<-function(library, ppm_search=10, process=T){
 
   #####################################
   ### Preparations before writing:
@@ -53,26 +53,44 @@ MSFinder_writer<-function(library){
   ### Reading from spectral library:
   #####################################
 
-  if (is.character(library)){ # If input is a mgf file
-    library=readMgfData(library, verbose = FALSE)
-    metadata=fData(library)
-    spectrum_list=Mgf2Splist(library)
-  } else { # If input is the output of library_generator
-    metadata = library$metadata
-    spectrum_list = library$sp}
+  if (is.character(library)){ # If input is a mgf file name
+    library=readMGF2(library)}
+
+  metadata = library$metadata
+  spectrum_list = library$sp
 
   index2=which(metadata$MSLEVEL=="2")
   metadata2 = metadata[index2,]
   ID_list=unique(metadata2$ID) # We only take IDs where MS2 data is present
   N = length(ID_list) # Number of items
 
+  ###########################################
+  ### Reading from parameter file template:
+  ###########################################
+
+  setwd(file.path(mainDir, subDir))
+  url = "https://raw.githubusercontent.com/daniellyz/MergeION/master/inst/msfinder_template.txt"
+  download.file(url,destfile="msfinder_template.txt") # Download and rename the files
+  con <- file("msfinder_template.txt",open="r")
+  param_lines <- readLines(con,warn = F)
+  close(con)
+  unlink("msfinder_template.txt") # Delete temporary parameter file
+
+  param_con <- file("msfinder_param.txt",open="w")
+  index1 = which(grepl("Ms1Tolerance=",param_lines))
+  param_lines[index1] = paste0("Ms1Tolerance=", ppm_search)
+  index2 = which(grepl("Ms2Tolerance=",param_lines))
+  param_lines[index2] = paste0("Ms2Tolerance=", ppm_search)
+  writeLines(param_lines,param_con)
+  close(param_con)
+
   ############################################
   ### Write mat file for each item in ID_list:
   ############################################
 
-  setwd(file.path(mainDir, subDir))
-
   for (i in 1:N){
+
+    print(i)
 
     id=ID_list[i]
     id2=str_replace_all(id, "[^[:alnum:]]", "_")
@@ -111,7 +129,21 @@ MSFinder_writer<-function(library){
     .cat("Num Peaks: ",nrow(sp2),"\n")
     .cat(paste(sp2[,1],"\t",sp2[,2], collapse = "\n"))
     .cat("\n")
-  }
+
+    if (process){
+      basic = "MsfinderConsoleApp.exe predict"
+
+      input = paste0("-i ",getwd())
+      output = paste0("-o ",getwd())
+      parameters = paste0("-m ",getwd(),"/msfinder_param.txt")
+
+      command = paste(basic,input,output,parameters,collapse = " ")
+
+      system(command, timeout = 600)
+      print(command)
+      unlink(paste0(id2,".mat"))
+    }
+}
 
   mat_files = list.files(pattern="\\.mat$")
   print(paste0(N," .mat files can be found in the folder /MSFinder, and they were:"))
@@ -119,17 +151,4 @@ MSFinder_writer<-function(library){
   #try(close(con),silent=T)
 
   setwd(file.path(mainDir))
-}
-
-############################
-### Internal functions:
-###########################
-
-Mgf2Splist<-function(MGFdat){
-
-  # From a MSnBase object to a list of spectra m/z intensity
-  N=length(MGFdat)
-  spectrum_list=list()
-  for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
-  return(spectrum_list)
 }

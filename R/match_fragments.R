@@ -13,8 +13,8 @@
 #' }
 #'
 #' @examples
-#' matched = match.fragments(library1,c(392.23,450.06))
-#' matched = match.fragments(library1,101.06,ppm_search = 10)
+#' matched = match_fragments(library1,c(392.23,450.06))
+#' matched = match_fragments(library1,101.06,ppm_search = 10)
 #'
 #' @export
 #'
@@ -22,7 +22,7 @@
 #' @importFrom tools file_ext
 #' @importFrom graphics points
 #'
-match.fragments<-function(library, fragments = NULL, match = c("All","Partial"), ppm_search = 20){
+match_fragments<-function(library, fragments = NULL, match = c("All","Partial"), ppm_search = 20){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -56,14 +56,11 @@ match.fragments<-function(library, fragments = NULL, match = c("All","Partial"),
   ### Reading from spectral library:
   #####################################
 
-  if (is.character(library)){ # If input is a mgf file
-    library=readMgfData(library, verbose = FALSE)
-    metadata=fData(library)
-    spectrum_list=Mgf2Splist(library)
-    library = list(sp=spectrum_list,metadata=metadata)
-  } else { # If input is the output of library_generator
-    metadata = library$metadata
-    spectrum_list = library$sp}
+  if (is.character(library)){ # If input is a mgf file name
+    library=readMGF2(library)}
+
+  metadata = library$metadata
+  spectrum_list = library$sp
 
   index2 = which(metadata$MSLEVEL=="2")
   metadata2 = metadata[index2,]
@@ -110,19 +107,9 @@ match.fragments<-function(library, fragments = NULL, match = c("All","Partial"),
   return(list(ID = unique(ID_found), SCANS = as.numeric(SCANS_found)))
 }
 
-
 ############################
 ### Internal functions:
 ###########################
-
-Mgf2Splist<-function(MGFdat){
-
-    # From a MSnBase object to a list of spectra m/z intensity
-    N=length(MGFdat)
-    spectrum_list=list()
-    for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
-    return(spectrum_list)
-}
 
 ind_min_ppm<-function(x,y){
   return(which.min(abs((x-y)/y*1000000)))}

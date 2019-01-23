@@ -3,7 +3,7 @@
 #' Function used by library_generator to detect MS1 scans
 #' @export
 
-process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
+process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,MS2_type = c("DDA","Targeted"), baseline= 1000, relative = 5,normalized=T){
 
   ### Initialize variables
 
@@ -96,7 +96,10 @@ process_MS1<-function(mzdatafiles,ref,rt_search=10,ppm_search=20,MS2_type = c("D
     for (i in 1:N){
       dat = cbind(MS1_scan_list[[i]]@mz,MS1_scan_list[[i]]@intensity)
       # Filter background noise and choose only peaks until +7Da of the precursor!!
-      selected = which(dat[,1]>new_MS1_meta_data$PEPMASS[i]-0.5 & dat[,1] < new_MS1_meta_data$PEPMASS[i]+7 & dat[,2]>baseline)
+
+      baseline1= max(baseline,max(dat[,2])*relative/100)
+
+      selected = which(dat[,1]>new_MS1_meta_data$PEPMASS[i]-0.5 & dat[,1] < new_MS1_meta_data$PEPMASS[i]+7 & dat[,2]>baseline1)
 
       if (length(selected)>1){ # At least 2 peaks should be present for isotope determination
         dat = dat[selected,]

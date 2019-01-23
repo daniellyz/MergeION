@@ -33,10 +33,6 @@ process_library<-function(library, consensus = T, ppm_window = 10, strict = F, o
   options(stringsAsFactors = FALSE)
   options(warn=-1)
 
-  #################
-  ### Check inputs:
-  #################
-
   if (missing(library)){
     stop("Please provide the output of library_generator() or a .mgf file as input library!")}
 
@@ -54,13 +50,11 @@ process_library<-function(library, consensus = T, ppm_window = 10, strict = F, o
   ### Reading from spectral library:
   #####################################
 
-  if (is.character(library)){ # If input is a mgf file
-    library=readMgfData(library, verbose = FALSE)
-    metadata=fData(library)
-    spectrum_list=Mgf2Splist(library)
-  } else { # If input is the output of library_generator
-    metadata = library$metadata
-    spectrum_list = library$sp}
+  if (is.character(library)){ # If input is a mgf file name
+    library=readMGF2(library)}
+
+  metadata = library$metadata
+  spectrum_list = library$sp
 
   ##############################################
   ###  Only take IDs where MS2 data is present:
@@ -138,42 +132,7 @@ process_library<-function(library, consensus = T, ppm_window = 10, strict = F, o
   library$sp = new_spectrum_list
   library$metadata = new_meta_data
 
- # writeMGF2(library$sp,library$metadata,output_library)
+  writeMGF2(library,output_library)
   write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
   return(library)
-}
-
-
-###########################
-### Internal functions:
-###########################
-
-Mgf2Splist<-function(MGFdat){
-
-  # From a MSnBase object to a list of spectra m/z intensity
-  N=length(MGFdat)
-  spectrum_list=list()
-  for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
-  return(spectrum_list)
-}
-
-writeMGF2 <- function(splist, metadata, con){
-  .cat <- function(..., file = con, sep = "", append = TRUE) {
-    cat(..., file = file, sep = sep, append = append)
-  }
-
-  con <- file(description = con, open = "at")
-  on.exit(close(con))
-
-  N=nrow(metadata)
-  C=ncol(metadata)
-  labels=colnames(metadata)
-  for (i in 1:N) {
-    .cat("\nBEGIN IONS\n")
-    for (j in 1:C){
-      .cat(labels[j],"=",metadata[i,j],"\n")}
-    sp=splist[[i]]
-    .cat(paste(sp[,1],"\t",sp[,2], collapse = "\n"))
-    .cat("\nEND IONS\n")
-  }
 }

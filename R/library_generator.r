@@ -8,7 +8,8 @@
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
-#' @param baseline Numeric if all raw_dat_files have the same beseline intensity (the minimum intensity that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))
+#' @param baseline Numeric if all raw_dat_files have the same beseline intensity (the absolute intensity threshold) that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))
+#' @param relative Numeric between 0 and 100 if all raw_dat_files have the same relative intensity threshold (% of the highest peak in each spectrum) or a numeric vector describing the relative threshold of each file (e.g. c(5,5,10)). Peaks above both absolute and relative thresholds are saved in the library.
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param output_library Name of the output library, the file extension must be mgf
@@ -46,11 +47,12 @@
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
 #' baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
+#' relative = 5 # Relative intensity threshold for each spectrum, 5% is fixed for both chromtograms
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
 #' library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-#'       baseline,normalized = T, input_library, output_library)
+#'       baseline, relative, normalized = T, input_library, output_library)
 #'
 #' ### We added the targeted scans of F3.mzXML to spectral library version 2:
 #'
@@ -60,18 +62,18 @@
 #' output_library = "library_V2.mgf" # The name of the new spectral library
 #'
 #' library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-#'       baseline, normalized = T, input_library, output_library)
+#'       baseline, relative, normalized = T, input_library, output_library)
 #'
 #' ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
-#'
-#' @export
 #'
 #' @importFrom MSnbase readMSData rtime tic fData readMgfData precursorMz
 #' @importFrom tools file_ext
 #' @importFrom utils write.table read.csv
-
-library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_type = "DDA",rt_search = 12,ppm_search = 20,
-                            baseline = 1000, normalized=T,
+#' @export
+#'
+library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
+                            MS2_type = "DDA",rt_search = 12,ppm_search = 20,
+                            baseline = 1000, relative =5, normalized=T,
                             input_library="", output_library=""){
 
   options(stringsAsFactors = FALSE)
@@ -112,6 +114,12 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   } else {
     if (length(baseline)!=FF){
       stop("The length of baseline must be the same as raw_data_files!")}}
+
+  if (length(relative)==1){
+    relative = rep(relative,FF)
+  } else {
+    if (length(relative)!=FF){
+      stop("The length of relative must be the same as raw_data_files!")}}
 
   MS2_type = match.arg(MS2_type,choices=c("DDA","Targeted"),several.ok = TRUE)
 
@@ -175,9 +183,9 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
     stop("Adduct type not valid!")}
 
   if (input_library!=""){
-    old_dat=readMgfData(input_library, verbose = FALSE)
-    spectrum_list=Mgf2Splist(old_dat)
-    metadata=fData(old_dat)
+    old_lib=readMGF2(input_library, verbose = FALSE)
+    spectrum_list=old_lib$sp
+    metadata=old_lib$metadata
     metadata_items=colnames(metadata)[1:(ncol(metadata)-6)]
     if (!(all(colnames(ref)==metadata_items))){
       stop("The new library must contain same exact metadata as the previous one!")}
@@ -192,7 +200,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   for (ff in 1:FF){
 
     if (2 %in% mslevel){
-      dat2 = process_MS2(raw_data_files[ff],ref,rt_search,ppm_search, MS2_type[ff], baseline[ff])
+      dat2 = process_MS2(raw_data_files[ff], ref, rt_search, ppm_search, MS2_type[ff], baseline[ff], relative[ff])
       LL2 = length(dat2$sp) # Added library size
       ref2 = dat2$ref_MS2 # Filter metadata data for MS1 searcch
       if (LL2>0){
@@ -203,7 +211,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
 
     if (1 %in% mslevel){
       if (!(2 %in% mslevel)){ref2=ref}
-      dat1 = process_MS1(raw_data_files[ff],ref2,rt_search,ppm_search, baseline[ff])
+      dat1 = process_MS1(raw_data_files[ff], ref2, rt_search, ppm_search, baseline[ff], relative[ff])
       LL1= length(dat1$sp) # Added library size
       if (LL1>0){
         for (n in 1:LL1){spectrum_list[[NN+n]]=dat1$sp[[n]]} # Update spectrum list
@@ -220,41 +228,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),MS2_ty
   library$sp = spectrum_list
   library$metadata = cbind.data.frame(metadata,SCANS=1:nrow(metadata))
 
-  writeMGF2(library$sp,library$metadata,output_library)
+  writeMGF2(library,output_library)
   write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
   return(library)
-}
-
-###########################
-### Internal functions:
-###########################
-
-Mgf2Splist<-function(MGFdat){
-
-  # From a MSnBase object to a list of spectra m/z intensity
-  N=length(MGFdat)
-  spectrum_list=list()
-  for (i in 1:N){spectrum_list[[i]]=cbind(MGFdat[[i]]@mz,MGFdat[[i]]@intensity)}
-  return(spectrum_list)
-}
-
-writeMGF2 <- function(splist, metadata, con) {
-  .cat <- function(..., file = con, sep = "", append = TRUE) {
-    cat(..., file = file, sep = sep, append = append)
-  }
-
-  con <- file(description = con, open = "at")
-  on.exit(close(con))
-
-  N=nrow(metadata)
-  C=ncol(metadata)
-  labels=colnames(metadata)
-  for (i in 1:N) {
-    .cat("\nBEGIN IONS\n")
-    for (j in 1:C){
-      .cat(labels[j],"=",metadata[i,j],"\n")}
-    sp=splist[[i]]
-    .cat(paste(sp[,1],"\t",sp[,2], collapse = "\n"))
-    .cat("\nEND IONS\n")
-  }
 }

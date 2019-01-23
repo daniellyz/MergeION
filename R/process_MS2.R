@@ -3,7 +3,7 @@
 #' Function used by library_generator to detect MS2 scans
 #' @export
 
-process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("DDA","Targeted"),baseline= 1000,normalized=T){
+process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("DDA","Targeted"),baseline= 1000,relative = 5,normalized=T){
 
   ### Initialize variables
 
@@ -81,11 +81,11 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("
 
       # We now check whether the isolated scan is better than previous:
             if ((error<=ppm_search) & MS2_tic[k]>tic_max & precursor_abundant==1){
-              valid_k=k # Update the scan number
+              valid_k=k # Update the scan fnumber
               tic_max=MS2_tic[valid_k]}
       }}}
 
-    if (valid_k==0){}
+    if (valid_k==0){}f
 
     if (valid_k!=0){ # If the scan is found
 
@@ -131,10 +131,12 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("
     n0=0
 
     for (i in 1:N){
+
       dat = cbind(MS2_scan_list[[i]]@mz,MS2_scan_list[[i]]@intensity)
+      baseline1= max(baseline,max(dat[,2])*relative/100)
 
       # Cut only masses smaller than precursor and filter background noise:
-      selected = which((dat[,1] < new_MS2_meta_data$PEPMASS[i]+10) & (dat[,2]>baseline))
+      selected = which((dat[,1] < new_MS2_meta_data$PEPMASS[i]+10) & (dat[,2]>baseline1))
       if (length(selected)>0){
         dat = dat[selected,]
         dat = matrix(dat,ncol=2)
