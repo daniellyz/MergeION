@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @importFrom MSnbase fData readMgfData
-#' @importFrom graphics plot title legend abline
+#' @importFrom graphics plot title legend abline text
 #' @importFrom tools file_ext
 #'
 visualize.spectra<-function(library, ID = NULL, mslevel=c(1,2), scan = NULL){

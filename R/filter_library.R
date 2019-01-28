@@ -16,11 +16,11 @@
 #'
 #' # Withholding the scan (MS1 and MS) with highest TIC for each ID:
 #'
-#' library2_1=process_library(library2, consensus=F, output_library="library_V2_filtered.mgf")
+#' library2_1=reduce_library_by_id(library2, consensus=F, output_library="library_V2_filtered.mgf")
 #'
 #' # Generating consensus spectra for all scans (MS1 and MS) of the same ID. The scan with highest TIC is used for metadata:
 #'
-#' library2_2=process_library(library2, consensus=T, ppm_window = 20, output_library="library_V2_consensus.mgf")
+#' library2_2=reduce_library_by_id(library2, consensus=T, ppm_window = 20, output_library="library_V2_consensus.mgf")
 #'
 #' @export
 #'
@@ -28,7 +28,8 @@
 #' @importFrom tools file_ext
 #' @importFrom utils write.table
 
-process_library<-function(library, consensus = T, ppm_window = 10, strict = F, output_library=""){
+reduce_library_by_id<-function(library, method = c("consensus","common","max_tic","max_nb_peaks"),
+                          consensus_window = 10, output_library=""){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -45,6 +46,10 @@ process_library<-function(library, consensus = T, ppm_window = 10, strict = F, o
     if (length(library)!=2 || (!is.list(library$sp)) || !is.data.frame(library$metadata)){
       stop("Please make sure your input library is a valid output of library_generator()!")
     }}
+
+  if (!(method  %in% c("consensus","common","max_tic","max_nb_peaks"))){
+    stop("The library processing method does not exist!")
+   }
 
   #####################################
   ### Reading from spectral library:

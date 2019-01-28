@@ -4,12 +4,19 @@
 \alias{MS1_screener}
 \title{Screening of LC-MS/MS chromatograms for metabolic features}
 \usage{
-MS1_screener(raw_data_files, polarity = "positive")
+MS1_screener(raw_data_files, polarity = "positive", rt_search = 12,
+  ppm_search = 10, baseline = 1000)
 }
 \arguments{
 \item{raw_data_files}{A character vector of file names of chromatograms fOr feature screening. All files must have be in centroid-mode with mzML or mzMXL extension!}
 
 \item{polarity}{Character 'positive' or 'negative'}
+
+\item{rt_search}{Retention time search tolerance (in second) for detecting common metabolic features}
+
+\item{ppm_search}{m/z search tolerance (in ppm) for detecting common metabolic features}
+
+\item{baseline}{Numeric. Minimal absolute intensity to be considered as a metabolic feature.}
 }
 \value{
 ref: Matrix object with 5 columns. Metadata containing all detected features

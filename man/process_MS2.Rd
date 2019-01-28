@@ -5,7 +5,8 @@
 \title{Read and combine targeted MS2 scans from one LC-MS/MS file}
 \usage{
 process_MS2(mzdatafiles, ref, rt_search = 10, ppm_search = 20,
-  MS2_type = c("DDA", "Targeted"), baseline = 1000, normalized = T)
+  MS2_type = c("DDA", "Targeted"), baseline = 1000, relative = 5,
+  normalized = T)
 }
 \description{
 Function used by library_generator to detect MS2 scans

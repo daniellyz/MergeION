@@ -11,13 +11,14 @@
 #' @param baseline Numeric if all raw_dat_files have the same beseline intensity (the absolute intensity threshold) that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))
 #' @param relative Numeric between 0 and 100 if all raw_dat_files have the same relative intensity threshold (% of the highest peak in each spectrum) or a numeric vector describing the relative threshold of each file (e.g. c(5,5,10)). Peaks above both absolute and relative thresholds are saved in the library.
 #' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
+#' @param user Character. Name or ID of the user(s) that created or updated the library.
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param output_library Name of the output library, the file extension must be mgf
 #'
 #' @return
 #' \itemize{
 #'   \item{"library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-#'   \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
+#'   \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
 #'   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
 #'   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
@@ -48,11 +49,12 @@
 #' ppm_search = 10  # Mass tolerance (ppm)
 #' baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
 #' relative = 5 # Relative intensity threshold for each spectrum, 5% is fixed for both chromtograms
+#' user_name = "Expert user" # ID of the user who creates/updates the library
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
 #' library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-#'       baseline, relative, normalized = T, input_library, output_library)
+#'       baseline, relative, normalized = T, user = user_name, input_library, output_library)
 #'
 #' ### We added the targeted scans of F3.mzXML to spectral library version 2:
 #'
@@ -62,19 +64,20 @@
 #' output_library = "library_V2.mgf" # The name of the new spectral library
 #'
 #' library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-#'       baseline, relative, normalized = T, input_library, output_library)
+#'       baseline, relative, normalized = T, user = user_name, input_library, output_library)
 #'
 #' ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 #'
 #' @importFrom MSnbase readMSData rtime tic fData readMgfData precursorMz
 #' @importFrom tools file_ext
-#' @importFrom utils write.table read.csv
+#' @importFrom utils write.table read.csv menu
+#' @importFrom plyr rbind.fill
 #' @export
 #'
 library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
                             MS2_type = "DDA",rt_search = 12,ppm_search = 20,
                             baseline = 1000, relative =5, normalized=T,
-                            input_library="", output_library=""){
+                            user = "", input_library = "", output_library = ""){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -82,6 +85,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
   spectrum_list = list()
   metadata = c()
   NN = 0
+  max_scan = 0 #  Highest scan ID
   unlink(output_library)
 
   ##############################
@@ -141,12 +145,12 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
     if (is_positive==1){polarity = "positive"}
     if (is_positive==2){polarity = "negative"}
     if (is_positive==3){
-      stop("Automated M1 Peak detection not possible with mixed ion mode in current release! All input files must be the same ion mode or please provide metadatafile!")
+      stop("Automated MS1 Peak detection not possible with mixed ion mode in current release! All input files must be the same ion mode or please provide metadatafile!")
     }
-    print("Starting M1 peak dection across all files!")
-    ref <- try(MS1_screener(raw_data_files, polarity), silent=T)
+    print("Starting MS1 peak dection across all files!")
+    ref <- try(MS1_screener(raw_data_files, polarity, rt_search*1.2, ppm_search*1.2, baseline=min(baseline)), silent=T)
     if (class(ref) == "try-error"){
-      stop("Automated M1 Peak detection failed! It's possible that certain data files don't contain MS1 scans! Please provide metadata file!")
+      stop("Automated MS1 Peak detection failed! It's possible that certain data files don't contain MS1 scans! Please provide metadata file!")
     }}
 
   #######################################
@@ -183,13 +187,12 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
     stop("Adduct type not valid!")}
 
   if (input_library!=""){
-    old_lib=readMGF2(input_library, verbose = FALSE)
+    old_lib=readMGF2(input_library)
     spectrum_list=old_lib$sp
     metadata=old_lib$metadata
-    metadata_items=colnames(metadata)[1:(ncol(metadata)-6)]
-    if (!(all(colnames(ref)==metadata_items))){
-      stop("The new library must contain same exact metadata as the previous one!")}
-    metadata=metadata[,1:(ncol(metadata)-1)] # Remove SCANS!
+    max_scan = max(as.numeric(metadata$SCANS))
+    #metadata_items=colnames(metadata)[1:(ncol(metadata)-13)]
+    #metadata=metadata[,1:(ncol(metadata)-1)] # Remove LAST COLUMN SCANS!
     NN = length(spectrum_list)
   }
 
@@ -201,21 +204,28 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
 
     if (2 %in% mslevel){
       dat2 = process_MS2(raw_data_files[ff], ref, rt_search, ppm_search, MS2_type[ff], baseline[ff], relative[ff])
+
       LL2 = length(dat2$sp) # Added library size
       ref2 = dat2$ref_MS2 # Filter metadata data for MS1 searcch
+      new_scans2 = (max_scan+1):(max_scan+LL2)
+      max_scan = max_scan+LL2
+      metadata2 = cbind.data.frame(dat2$metadata, PARAM_SUBMIT_USER = user, PARAM_CREATION_TIME = Sys.time(), SCANS = new_scans2)
       if (LL2>0){
         for (n in 1:LL2){spectrum_list[[NN+n]]=dat2$sp[[n]]} # Update spectrum list
-        metadata=rbind(metadata,dat2$metadata) # Update metadata
+        metadata=rbind.fill(metadata,metadata2) # Update metadata
         NN=NN+LL2
       }}
 
-    if (1 %in% mslevel){
+    if (1 %in% mslevel){ # We search MS1 only for compounds that are fragmented to provide isotopic pattern knowledge
       if (!(2 %in% mslevel)){ref2=ref}
       dat1 = process_MS1(raw_data_files[ff], ref2, rt_search, ppm_search, baseline[ff], relative[ff])
       LL1= length(dat1$sp) # Added library size
+      new_scans1 = (max_scan+1):(max_scan+LL1)
+      max_scan = max_scan+LL1
+      metadata1 = cbind.data.frame(dat1$metadata, PARAM_SUBMIT_USER = user, PARAM_CREATION_TIME = Sys.time(), SCANS = new_scans1)
       if (LL1>0){
         for (n in 1:LL1){spectrum_list[[NN+n]]=dat1$sp[[n]]} # Update spectrum list
-        metadata=rbind(metadata,dat1$metadata) # Update metadata
+        metadata=rbind.fill(metadata,metadata1) # Update metadata
         NN=NN+LL1
       }}
   }
@@ -226,7 +236,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
 
   library = list()
   library$sp = spectrum_list
-  library$metadata = cbind.data.frame(metadata,SCANS=1:nrow(metadata))
+  library$metadata = metadata
 
   writeMGF2(library,output_library)
   write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")

@@ -5,8 +5,9 @@
 \title{Batch processing of LC-MS/MS chromatograms into a spectral library}
 \usage{
 library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
-  MS2_type = "DDA", rt_search = 12, ppm_search = 20, baseline = 1000,
-  normalized = T, input_library = "", output_library = "")
+  MS2_type = "DDA", rt_search = 12, ppm_search = 20,
+  baseline = 1000, relative = 5, normalized = T, user = "",
+  input_library = "", output_library = "")
 }
 \arguments{
 \item{raw_data_files}{A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!}
@@ -21,9 +22,13 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 
 \item{ppm_search}{m/z search tolerance (in ppm) for targeted m/z}
 
-\item{baseline}{Numeric if all raw_dat_files have the same beseline intensity (the minimum intensity that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))}
+\item{baseline}{Numeric if all raw_dat_files have the same beseline intensity (the absolute intensity threshold) that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))}
+
+\item{relative}{Numeric between 0 and 100 if all raw_dat_files have the same relative intensity threshold (% of the highest peak in each spectrum) or a numeric vector describing the relative threshold of each file (e.g. c(5,5,10)). Peaks above both absolute and relative thresholds are saved in the library.}
 
 \item{normalized}{Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100}
+
+\item{user}{Character. Name or ID of the user(s) that created or updated the library.}
 
 \item{input_library}{Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.}
 
@@ -32,7 +37,7 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 \value{
 \itemize{
   \item{"library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-  \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
+  \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 }
@@ -62,11 +67,13 @@ MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respecti
 rt_search = 12 # Retention time tolerance (s)
 ppm_search = 10  # Mass tolerance (ppm)
 baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
+relative = 5 # Relative intensity threshold for each spectrum, 5\% is fixed for both chromtograms
+user_name = "Expert user" # ID of the user who creates/updates the library
 input_library = "" # A brand new library, there's no previous dependency
 output_library = "library_V1.mgf" # Name of the library
 
 library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-      baseline,normalized = T, input_library, output_library)
+      baseline, relative, normalized = T, user = user_name, input_library, output_library)
 
 ### We added the targeted scans of F3.mzXML to spectral library version 2:
 
@@ -76,7 +83,7 @@ input_library = "library_V1.mgf" # The first mgf file of library1
 output_library = "library_V2.mgf" # The name of the new spectral library
 
 library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, rt_search, ppm_search,
-      baseline, normalized = T, input_library, output_library)
+      baseline, relative, normalized = T, user = user_name, input_library, output_library)
 
 ### In the end, two spectral library versions "library_V1.mgf" and "library_V2.mgf" should appear in the working directory along with metadata table (txt files)
 

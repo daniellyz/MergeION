@@ -13,7 +13,7 @@
 #' # Read a library file:
 #' library = readMGF2("library_V2.mgf")
 #' # Add new metadata "RESOLUTION = HIGH" to all scans:
-#' library$metadata$RESOLUTION = "HIGH")
+#' library$metadata$RESOLUTION = "HIGH"
 #' # Write into a new mgf file:
 #' writeMGF2(library,"library_V2_bis.mgf")
 #'
@@ -49,7 +49,7 @@ writeMGF2 <- function(library, con) {
   for (i in 1:N) {
     .cat("\nBEGIN IONS\n")
     for (j in 1:C){
-      .cat(labels[j],"=",metadata[i,j],"\n")}
+      .cat(labels[j],"=",as.character(metadata[i,j]),"\n")}
     sp=splist[[i]]
     .cat(paste(sp[,1],"\t",sp[,2], collapse = "\n"))
     .cat("\nEND IONS\n")

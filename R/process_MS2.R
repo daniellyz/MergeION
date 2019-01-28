@@ -3,7 +3,9 @@
 #' Function used by library_generator to detect MS2 scans
 #' @export
 
-process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("DDA","Targeted"),baseline= 1000,relative = 5,normalized=T){
+process_MS2<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
+                      MS2_type = c("DDA","Targeted"),baseline= 1000,relative = 5,
+                      normalized=T){
 
   ### Initialize variables
 
@@ -85,7 +87,7 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("
               tic_max=MS2_tic[valid_k]}
       }}}
 
-    if (valid_k==0){}f
+    if (valid_k==0){}
 
     if (valid_k!=0){ # If the scan is found
 
@@ -124,6 +126,15 @@ process_MS2<-function(mzdatafiles,ref,rt_search=10,ppm_search=20, MS2_type = c("
     new_MS2_meta_data[,"TIC"]= MS2_tic[scan_number]
     new_MS2_meta_data[,"PEPMASS_DEV"]=mass_dev
     new_MS2_meta_data[,"SCAN_NUMBER"] = scan_number
+
+    ### Update metadata with library search parameters
+
+    new_MS2_meta_data[,"PARAM_RT_SEARCH"]= rep(rt_search,N)
+    new_MS2_meta_data[,"PARAM_MASS_SEARCH_PPM"]= rep(ppm_search,N)
+    new_MS2_meta_data[,"PARAM_BASELINE_INTENSITY"]= rep(baseline,N)
+    new_MS2_meta_data[,"PARAM_RELATIVE_INTENSITY"]= rep(relative,N)
+    if (normalized){new_MS2_meta_data[,"PARAM_NORMALIZED"]= rep("Yes",N)
+    } else {new_MS2_meta_data[,"PARAM_NORMALIZED"]= rep("No",N)}
 
   ### Denoise spectra
   if (!is.null(new_MS2_meta_data)){
