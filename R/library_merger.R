@@ -26,7 +26,7 @@
 #'
 #' # Generating consensus spectra for all scans (MS1 and MS) of the same ID. The scan with highest TIC is used for metadata:
 #'
-#' library2_2=group_by_id(library2, nethod="consensus", consensus_window = 20, output_library="library_V2_consensus.mgf")
+#' library2_2=group_by_id(library2, method="consensus", consensus_window = 20, output_library="library_V2_consensus.mgf")
 #'
 #' @export
 #'
@@ -34,7 +34,7 @@
 #' @importFrom tools file_ext
 #' @importFrom utils write.table
 
-group_by_id<-function(library, method = c("consensus","common_peaks","max_tic","max_nb_peaks","most_recent"),
+library_merger<-function(library, method = c("consensus","common_peaks","max_tic","max_nb_peaks","most_recent"),
                           consensus_window = 10, output_library=""){
 
   options(stringsAsFactors = FALSE)
