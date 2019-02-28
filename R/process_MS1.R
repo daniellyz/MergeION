@@ -80,11 +80,7 @@ process_MS1<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
            if (isomers){
              valid_k = separated_peaks(peak_range, peak_rts, peak_tics, rt_window = rt_search*2) # Scan number of peaks
            } else {valid_k = peak_range[which.max(peak_tics)]} # Scan number of the highest peak if no isomers
-<<<<<<< HEAD
            peak_int = peak_tics[match(valid_k,peak_range)] # Precurusor intensity of selected scans
-=======
-          peak_int = peak_tics[match(valid_k,peak_range)] # Precurusor intensity of selected scans
->>>>>>> bd4e643929c7d66eb5cf8161a8720c8dda73bad7
       }
 
     if (sum(valid_k)>0){ # If at least a scan is found
@@ -187,14 +183,8 @@ separated_peaks<-function(ranges, rts, tics, rt_window=20){
       valid = which(dis<=rt_window) # Check peak overlap
       if (length(valid)==0){ # No overlap
         valid_k = c(valid_k,tmp[i,1])
-        previous_rt = c(previous_rt,tmp[i,2])
-      }
+        previous_rt = c(previous_rt,tmp[i,2])}
     }} else {valid_k = ranges}
-<<<<<<< HEAD
   return(unique(valid_k))
-=======
-  return(valid_k)
->>>>>>> bd4e643929c7d66eb5cf8161a8720c8dda73bad7
 }
-
 

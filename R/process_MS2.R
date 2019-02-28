@@ -213,7 +213,6 @@ ppm_distance<-function(x,y){
 separated_peaks<-function(ranges, rts, tics, rt_window=20){
 
   # ranges: scan or peak number
-<<<<<<< HEAD
   NR = length(ranges)
 
  # screen:
@@ -228,26 +227,7 @@ separated_peaks<-function(ranges, rts, tics, rt_window=20){
        if (length(valid)==0){ # No overlap
          valid_k = c(valid_k,tmp[i,1])
          previous_rt = c(previous_rt,tmp[i,2])}
-  }} else {valid_k = ranges}
-return(unique(valid_k))
-=======
- NR = length(ranges)
-
- # screen:
- if (NR>1){
-   tmp = data.matrix(cbind(ranges,rts,tics))
-   tmp = tmp[order(tics,decreasing=T),] # Order the tmp by intensity
-   valid_k = tmp[1,1]
-   previous_rt = tmp[1,2]
-   for (i in 2:NR){
-      dis = abs(tmp[i,2]-previous_rt)
-      valid = which(dis<=rt_window) # Check peak overlap
-      if (length(valid)==0){ # No overlap
-        valid_k = c(valid_k,tmp[i,1])
-        previous_rt = c(previous_rt,tmp[i,2])
-  }
- }} else {valid_k = ranges}
-return(valid_k)
->>>>>>> bd4e643929c7d66eb5cf8161a8720c8dda73bad7
+   }} else {valid_k = ranges}
+  return(unique(valid_k))
 }
 
