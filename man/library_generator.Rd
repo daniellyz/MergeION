@@ -5,9 +5,9 @@
 \title{Batch processing of LC-MS/MS chromatograms into a spectral library}
 \usage{
 library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
-  MS2_type = "DDA", rt_search = 12, ppm_search = 20,
-  baseline = 1000, relative = 5, normalized = T, user = "",
-  input_library = "", output_library = "")
+  MS2_type = "DDA", isomers = TRUE, rt_search = 12,
+  ppm_search = 20, baseline = 1000, relative = 5, normalized = T,
+  user = "", input_library = "", output_library = "")
 }
 \arguments{
 \item{raw_data_files}{A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!}
@@ -17,6 +17,8 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 \item{mslevel}{Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !}
 
 \item{MS2_type}{A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))}
+
+\item{isomers}{Logical. TRUE if isomers are kept (scans with same precursor mass but with difference in retention time higher than 2 * rt_search). If FALSE, only the isomer with highest TIC is kept.}
 
 \item{rt_search}{Retention time search tolerance (in second) for targeted RT}
 
@@ -36,8 +38,7 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 }
 \value{
 \itemize{
-  \item{"library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-  \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
+  \item{"library" ~ Generated spectra library is a list object of two elements: "library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity; "library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 }

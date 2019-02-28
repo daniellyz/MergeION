@@ -6,19 +6,20 @@
 #' @param metadata_file A single character or NULL (not recommended). If provided, it must be the metadata file name with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl") and "ID" (A unique identifier for targeted compounds in spectral library). If missing or NULL, a non-targeted feature screening will be performed using MatchedFilter from XCMS. In current release, this functionality only works when all input files are acquired on the same instrument and from the same ion mode, and they must all contain MS1 scans. Please be aware that non-targeted screening can lead to loss of important features or unwanted peaks (e.g. noise).
 #' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
+#' @param isomers Logical. TRUE if isomers are kept (scans with same precursor mass but with difference in retention time higher than 2 * rt_search). If FALSE, only the isomer with highest TIC is kept.
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
 #' @param baseline Numeric if all raw_dat_files have the same beseline intensity (the absolute intensity threshold) that is considered as a mass peak and written into the library); or a numeric vector describing the baseline of each file (e.g. c(100,4000,10))
 #' @param relative Numeric between 0 and 100 if all raw_dat_files have the same relative intensity threshold (% of the highest peak in each spectrum) or a numeric vector describing the relative threshold of each file (e.g. c(5,5,10)). Peaks above both absolute and relative thresholds are saved in the library.
-#' @param normalized Logical, TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
+#' @param normalized Logical. TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param user Character. Name or ID of the user(s) that created or updated the library.
+#' @param write_files Logical. TRUE if user wishes to write the mgf and metadata (txt) file in the folder
 #' @param input_library Name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" if the new library has no dependency with previous ones.
 #' @param output_library Name of the output library, the file extension must be mgf
 #'
 #' @return
 #' \itemize{
-#'   \item{"library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
-#'   \item{"library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
+#'   \item{"library" ~ Generated spectra library is a list object of two elements: "library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity; "library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
 #'   \item{"<ouput_library>" ~ A mgf spectral library file will be written in user's working directory. It contains both spectra and metadata}
 #'   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
@@ -45,11 +46,13 @@
 #' mslevel = c(1,2)
 #' # Both MS1 and MS2 scans are extracted! MS1 scan contains isotopic pattern of targeted m/z
 #' MS2_type = c("DDA","Targeted") # Mode of MS/MS experiment for F1 and F2 respectively
+#' isomers = T #
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
 #' baseline = 1000 # Noise level of each mass spectrum, 1000 is fixed for both chromatograms
 #' relative = 5 # Relative intensity threshold for each spectrum, 5% is fixed for both chromtograms
 #' user_name = "Expert user" # ID of the user who creates/updates the library
+#' write
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
 #'
@@ -72,12 +75,13 @@
 #' @importFrom tools file_ext
 #' @importFrom utils write.table read.csv menu
 #' @importFrom plyr rbind.fill
+#' @importFrom pracma findpeaks
 #' @export
 #'
-library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
-                            MS2_type = "DDA",rt_search = 12,ppm_search = 20,
+library_generator<-function(raw_data_files, metadata_file, mslevel = c(1,2),
+                            MS2_type = "DDA",isomers = TRUE, rt_search = 12,ppm_search = 20,
                             baseline = 1000, relative =5, normalized=T,
-                            user = "", input_library = "", output_library = ""){
+                            user = "", write_files = TRUE, input_library = "", output_library = ""){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -203,8 +207,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
   for (ff in 1:FF){
 
     if (2 %in% mslevel){
-      dat2 = process_MS2(raw_data_files[ff], ref, rt_search, ppm_search, MS2_type[ff], baseline[ff], relative[ff])
-
+      dat2 = process_MS2(raw_data_files[ff], ref, rt_search, ppm_search, MS2_type[ff], isomers, baseline[ff], relative[ff])
       LL2 = length(dat2$sp) # Added library size
       ref2 = dat2$ref_MS2 # Filter metadata data for MS1 searcch
       new_scans2 = (max_scan+1):(max_scan+LL2)
@@ -218,7 +221,7 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
 
     if (1 %in% mslevel){ # We search MS1 only for compounds that are fragmented to provide isotopic pattern knowledge
       if (!(2 %in% mslevel)){ref2=ref}
-      dat1 = process_MS1(raw_data_files[ff], ref2, rt_search, ppm_search, baseline[ff], relative[ff])
+      dat1 = process_MS1(raw_data_files[ff], ref2, rt_search, ppm_search, isomers, baseline[ff], relative[ff])
       LL1= length(dat1$sp) # Added library size
       new_scans1 = (max_scan+1):(max_scan+LL1)
       max_scan = max_scan+LL1
@@ -238,7 +241,8 @@ library_generator<-function(raw_data_files,metadata_file,mslevel = c(1,2),
   library$sp = spectrum_list
   library$metadata = metadata
 
-  writeMGF2(library,output_library)
-  write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
+  if (write_files){
+    writeMGF2(library,output_library)
+    write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")}
   return(library)
 }
