@@ -31,6 +31,9 @@ process_MS1<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
     NS = length(MS1_Janssen) # Total number of scans
     MS1_prec_rt = rtime(MS1_Janssen) # In second
     MS1_tic = sapply(1:NS,function(ttt) MS1_Janssen[[ttt]]@tic)
+    polarity = polarity(MS1_Janssen)[1]
+    if (polarity==1){ref = ref[ref$IONMODE=="Positive",]}
+    if (polarity==-1){ref = ref[ref$IONMODE=="Negative",]}
 
     ### Extract ref:
 
@@ -65,7 +68,7 @@ process_MS1<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
                prec_int = Frag_data@intensity[prec_ind] # The intensity of precursor ion
 
            # We now check whether the precursor is precisely isolated
-           if ((prec_int>10*baseline) & (error<ppm_search)){ # The precursor mass must be higher than baseline
+           if ((prec_int>10*baseline) & (error<ppm_search)){ # The precursor mass must be 10 times higher than baseline
                scan_rts = c(scan_rts,MS1_prec_rt[k])
                scan_tics = c(scan_tics,prec_int)
                klist = c(klist,k)
@@ -110,7 +113,7 @@ process_MS1<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
 
   ### Update metadata
 
-    new_MS1_meta_data[,"PEPMASS"]=round(new_PEP_mass,5)
+    new_MS1_meta_data[,"PEPMASS"]=round(as.numeric(new_PEP_mass),5)
     new_MS1_meta_data[,"RT"]= round(MS1_prec_rt[scan_number]/60,2)
     new_MS1_meta_data[,"FILENAME"]=rep(mzdatafiles,N)
     new_MS1_meta_data[,"MSLEVEL"]=rep(1,N)

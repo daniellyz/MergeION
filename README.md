@@ -30,29 +30,21 @@ If such function is not available in vendor software or user want to convert man
 
 ## 3. Check spectra baseline
 
-Mass spectra show usually a baseline caused by chemical noise in matrix or by ion overloading. Users can define such baseline for each LC-MS/MS file so that only significant mass peaks are saved. Such filter can reduce spectral library size and improve chemical identification. The baselines can be roughly determined by visualizing MS1 scans in vendor software or MZMine. Data acquired on the same MS instrument usually have similar baseline levels.
+Mass spectra show usually a baseline caused by chemical noise in matrix or by ion overloading. Users can define such baseline (absolute and relative) for each LC-MS/MS file so that only significant mass peaks are saved. Such filter can reduce spectral library size and improve chemical identification. The baselines can be roughly determined by visualizing MS1 scans in vendor software or MZMine. Data acquired on the same MS instrument usually have similar baseline levels.
 
 ![choose](inst/base.png)
 
 ## 4. Preparation of metadata
 
-The metadata contains the metabolic features to be extracted from chromatogram(s) and it is strongly recommended. 
+The metadata contains the metabolic features to be extracted from chromatogram(s) and it is. 
 
-It must be a semicolon-separated .csv file where each row represents a targeted metabolic feature (PEPMASS, RT, IONMODE, ADDUCT and ID). Other information of metabolic feature can be added and will be found in the final merged library. A single metadata should be used for batch-processing the list of chromatogram files. The example metadata can be downloaded at https://zenodo.org/record/1326555:
+It must be a semicolon-separated .csv file where each row represents a targeted metabolic feature (PEPMASS, RT, IONMODE, ADDUCT, CHARGE and ID). Other information of metabolic feature can be added and will be found in the final merged library. A single metadata should be used for batch-processing the list of chromatogram files. The example metadata can be downloaded at https://zenodo.org/record/2581847/files/:
 
 ![choose](inst/meta.png)
 
 ## Example 1: generating an in-house spectral library of drug standards
 
 Please type and select html of Example 1:
-
-```R
-browseVignettes("MergeION")
-```
-
-## Example 2: chemical identification of urine and beer metabolites
-
-Please type and select html of Example 2:
 
 ```R
 browseVignettes("MergeION")

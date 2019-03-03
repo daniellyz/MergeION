@@ -33,11 +33,14 @@ process_MS2<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
     targets =  unique(MS2_prec_mz) # All targeted masses
     MS2_prec_rt = rtime(MS2_Janssen) # In second
     MS2_tic = sapply(1:NS,function(ttt) MS2_Janssen[[ttt]]@tic)
+    polarity = polarity(MS2_Janssen)[1]
 
   ### Filter ref because not all targeted m/z exists or fragmented in the sample! Important for not to search whatever
 
     dev_targets = sapply(ref$PEPMASS,function(x) min(abs(x-targets)))
     valid = which(dev_targets <= 1) #  Find targeted metadata in experimental file!! - faster!
+    if (polarity==1){valid = intersect(valid, which(ref$IONMODE=="Positive"))}
+    if (polarity==-1){valid = intersect(valid, which(ref$IONMODE=="Negative"))}
 
     ref = ref[valid,]
     prec_theo=ref$PEPMASS
@@ -64,16 +67,9 @@ process_MS2<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
        if (length(scan_range)<2){}
        if (length(scan_range)>=1){
 
-    ### Targeted mode RT provided: Simply search the highest TIC in the RT window:
+    ### Targeted mode: check inside scans the precursor masses:
 
-        if (!is.na(prec_rt[i]) & (MS2_type=="Targeted")){
-          max_int=which.max(MS2_tic[scan_range])
-          if (length(max_int)>0) {valid_k=scan_range[max_int]} # Selected scan number
-        }
-
-    ### Targeted mode RT not provided: check inside scans the precursor masses:
-
-        if (is.na(prec_rt[i]) & (MS2_type=="Targeted")){
+        if (MS2_type=="Targeted"){
           scan_rts = c() # Validated scan retention time
           scan_tics = c()
           klist = c()
@@ -95,9 +91,9 @@ process_MS2<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
             peak_rts = scan_rts[peaks] # retention time of scans
             peak_tics = scan_tics[peaks]
             peak_range = klist[peaks]
-            if (isomers){
+            if (isomers & is.na(prec_rt[i])){ # Report several peaks only if retention time is not precised
                 valid_k = separated_peaks(peak_range, peak_rts, peak_tics, rt_window = rt_search*2)
-          } else {valid_k = peak_range[which.max(peak_tics)]} # Scan number of the highest peak if no isomers
+          } else {valid_k = peak_range[which.max(peak_tics)]}
       }}
 
     ### DDA mode: simply check scan labels in the scan range:
@@ -149,7 +145,7 @@ process_MS2<-function(mzdatafiles, ref, rt_search=10, ppm_search=20,
     }}} # End of big for loop of scan matching to reference masses
 
   ### Update metadata
-    new_MS2_meta_data[,"PEPMASS"] = round(new_PEP_mass,5)
+    new_MS2_meta_data[,"PEPMASS"] = round(as.numeric(new_PEP_mass),5)
     new_MS2_meta_data[,"RT"] = round(MS2_prec_rt[scan_number]/60,2)  # minutes
     new_MS2_meta_data[,"FILENAME"] = rep(mzdatafiles,N)
     new_MS2_meta_data[,"MSLEVEL"] = rep(2,N)

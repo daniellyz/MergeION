@@ -32,7 +32,7 @@
 #'
 #' @importFrom MSnbase fData readMgfData
 #' @importFrom tools file_ext
-#' @importFrom stringr str_replace_all
+#' @importFrom stringr str_replace_all fixed
 #'
 library_manager<-function(library, query = "", logical = c("AND","OR"), ppm_search = 20, rt_search = 12){
 
