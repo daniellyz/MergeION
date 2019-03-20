@@ -2,7 +2,7 @@
 title: "Example 1: generating an in-house spectral library of drug standards"
 author: "Youzhong LIU"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: pdf_document
 vignette: >
   %\VignetteIndexEntry{Example1}
   %\VignetteEngine{knitr::rmarkdown}

@@ -3,55 +3,66 @@
 #' Function used by library_generator() to create adducts and multiple charged features
 #' @export
 #'
-meta_editor<-function(ref, adducts = c("M+H","M+Na","M+K","M-H","M+Cl"), max.charge = 1){
+meta_editor<-function(ref, adducts = c("Default","M+H","M+Na","M+K","M+NH4","M-H","M+Cl"), max.charge = 1){
 
-  ref_ids = unique(ref$ID)
-  new_metadata = c()
-  charges = 1:max.charge
+  if (!("Default" %in% adducts)){
 
-  for (id in ref_ids){
-    valid = which(ref_ids==id)
-    sub_ref = ref[valid,] # metadata of the id
-    new_pep = c()
-    new_ions = c()
-    new_adducts = c()
-    new_charges = c()
+    ref_ids = unique(ref$ID)
+    new_metadata = c()
+    charges = 1:max.charge
+
+    for (id in ref_ids){
+        valid = which(ref_ids==id)
+        sub_ref = ref[valid,] # metadata of the id
+        new_pep = c()
+        new_ions = c()
+        new_adducts = c()
+        new_charges = c()
 
     # Calculate neutral masses:
-    if (sub_ref$ADDUCT[1]=="M+H"){NM = sub_ref$PEPMASS[1] - 1.007276}
-    if (sub_ref$ADDUCT[1]=="M+Na"){NM = sub_ref$PEPMASS[1] - 22.989221}
-    if (sub_ref$ADDUCT[1]=="M+K"){NM = sub_ref$PEPMASS[1] - 38.963158}
-    if (sub_ref$ADDUCT[1]=="M-H"){NM = sub_ref$PEPMASS[1] + 1.007276}
-    if (sub_ref$ADDUCT[1]=="M+Cl"){NM = sub_ref$PEPMASS[1] - 34.969401}
+        if (sub_ref$ADDUCT[1]=="M+H"){NM = sub_ref$PEPMASS[1] - 1.007276}
+        if (sub_ref$ADDUCT[1]=="M+Na"){NM = sub_ref$PEPMASS[1] - 22.989221}
+        if (sub_ref$ADDUCT[1]=="M+K"){NM = sub_ref$PEPMASS[1] - 38.963158}
+        if (sub_ref$ADDUCT[1]=="M+NH4"){NM = sub_ref$PEPMASS[1] - 18.033826}
+        if (sub_ref$ADDUCT[1]=="M-H"){NM = sub_ref$PEPMASS[1] + 1.007276}
+        if (sub_ref$ADDUCT[1]=="M+Cl"){NM = sub_ref$PEPMASS[1] - 34.969401}
 
     # Calculate adduct masses
-    for (adduct in adducts){
-      for (charge in charges){
-         if (adduct == "M+H"){
-            new_pep = c(new_pep, (NM + 1.007276*charge)/charge)
-            new_ions = c(new_ions, "Positive")
-            new_adducts = c(new_adducts, "M+H")
-            new_charges = c(new_charges, charge)}
+        for (adduct in adducts){
+          for (charge in charges){
 
-         if (adduct == "M+Na"){
+
+          if (adduct == "M+H"){
+                  new_pep = c(new_pep, (NM + 1.007276*charge)/charge)
+                  new_ions = c(new_ions, "Positive")
+                  new_adducts = c(new_adducts, "M+H")
+                  new_charges = c(new_charges, charge)}
+
+          if (adduct == "M+Na"){
             new_pep = c(new_pep, (NM + 22.989221*charge)/charge)
             new_ions = c(new_ions, "Positive")
             new_adducts = c(new_adducts, "M+Na")
             new_charges = c(new_charges, charge)}
 
-         if (adduct == "M+K"){
+          if (adduct == "M+K"){
             new_pep = c(new_pep, (NM + 38.963158*charge)/charge)
             new_ions = c(new_ions, "Positive")
             new_adducts = c(new_adducts, "M+K")
             new_charges = c(new_charges, charge)}
 
-         if (adduct == "M-H"){
+          if (adduct == "M+NH4"){
+            new_pep = c(new_pep, (NM + 18.033826*charge)/charge)
+            new_ions = c(new_ions, "Positive")
+            new_adducts = c(new_adducts, "M+NH4")
+            new_charges = c(new_charges, charge)}
+
+           if (adduct == "M-H"){
             new_pep = c(new_pep, (NM - 1.007276*charge)/charge)
             new_ions = c(new_ions, "Negative")
             new_adducts = c(new_adducts, "M+K")
             new_charges = c(new_charges, charge)}
 
-         if (adduct == "M+Cl"){
+           if (adduct == "M+Cl"){
             new_pep = c(new_pep, (NM + 34.969401*charge)/charge)
             new_ions = c(new_ions, "Negative")
             new_adducts = c(new_adducts, "M+Cl")
@@ -66,11 +77,13 @@ meta_editor<-function(ref, adducts = c("M+H","M+Na","M+K","M-H","M+Cl"), max.cha
       new_sub_ref$PEPMASS = round(new_pep,5)
       new_sub_ref$IONMODE = new_ions
       new_sub_ref$ADDUCT = new_adducts
-      new_sub_ref$CHARGE = new_charges
+      new_sub_ref$CHARGE = new_charges   # End of calculating an id
 
     # Add to the new metadata:
       new_metadata = rbind.data.frame(new_metadata, new_sub_ref)
-  } # End of calculating an id
+    }} else {
+      new_metadata = data.frame(ref)
+  }
 
   return(new_metadata)
 }

@@ -6,7 +6,7 @@
 #' @param metadata_file A single character or NULL (not recommended). If provided, it must be the metadata file name with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl"), "CHARGE" (charge number, please keep it at 1) and "ID" (A unique identifier for targeted compounds in spectral library). If missing or NULL, a non-targeted feature screening will be performed using MatchedFilter from XCMS. In current release, this functionality only works when all input files are acquired on the same instrument and from the same ion mode, and they must all contain MS1 scans. Please be aware that non-targeted screening can lead to loss of important features or unwanted peaks (e.g. noise).
 #' @param mslevel Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !
 #' @param MS2_type  A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))
-#' @param adduct_type Vector of character. Adduct types of ions considered. Its elements must be among "M+H","M+Na","M+K","M-H","M+Cl".
+#' @param adduct_type Vector of character. Adduct types of ions considered. Its elements must be among "Default","M+H","M+Na","M+K","M+NH4","M-H" and "M+Cl". No additional ion species will be calculated if "Default".
 #' @param max.charge Integer. Maximal charge number. Must be a positive integer e.g. 2 if +1, +2 (or -1, -2) ions are consired.
 #' @param isomers Logical. TRUE if isomers are kept (scans with same precursor mass but with difference in retention time higher than 2 * rt_search). If FALSE, only the isomer with highest TIC is kept.
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
@@ -132,7 +132,7 @@ library_generator<-function(raw_data_files, metadata_file, mslevel = c(1,2),
     if (length(MS2_type)!=FF){
       stop("The length of MS2_type must be the same as raw_data_files!")}}
 
-  if (!all(adduct_type %in% c("M+H","M+Na","M+K","M-H","M+Cl"))){
+  if (!all(adduct_type %in% c("Default","M+H","M+Na","M+K","M+NH4","M-H","M+Cl"))){
     stop("adduct_type not valid!")}
 
   if ((max.charge%%1 != 0) || (max.charge<=0)){
