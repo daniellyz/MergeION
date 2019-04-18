@@ -255,6 +255,7 @@ library_generator<-function(raw_data_files, metadata_file, mslevel = c(1,2),
 
     if (1 %in% mslevel){ # We search MS1 only for compounds that are fragmented to provide isotopic pattern knowledge
       if (!(2 %in% mslevel)){ref2=ref}
+      if (2 %in% mslevel & LL2==0){ref2=ref}
       dat1 = process_MS1(raw_data_files[ff], ref2, rt_search, ppm_search, isomers, baseline[ff], relative[ff])
       LL1= length(dat1$sp) # Added library size
       if (LL1>0){
