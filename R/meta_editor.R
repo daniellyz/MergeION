@@ -30,8 +30,6 @@ meta_editor<-function(ref, adducts = c("Default","M+H","M+Na","M+K","M+NH4","M-H
     # Calculate adduct masses
         for (adduct in adducts){
           for (charge in charges){
-
-
           if (adduct == "M+H"){
                   new_pep = c(new_pep, (NM + 1.007276*charge)/charge)
                   new_ions = c(new_ions, "Positive")

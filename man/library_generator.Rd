@@ -21,7 +21,7 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 
 \item{isomers}{Logical. TRUE if isomers are kept (scans with same precursor mass but with difference in retention time higher than 2 * rt_search). If FALSE, only the isomer with highest TIC is kept.}
 
-\item{adduct_type}{Vector of character. Adduct types of ions considered. Its elements must be among "M+H","M+Na","M+K","M-H","M+Cl".}
+\item{adduct_type}{Vector of character. Adduct types of ions considered. Its elements must be among "Default","M+H","M+Na","M+K","M+NH4","M-H" and "M+Cl". No additional ion species will be calculated if "Default".}
 
 \item{max.charge}{Integer. Maximal charge number. Must be a positive integer e.g. 2 if +1, +2 (or -1, -2) ions are consired.}
 

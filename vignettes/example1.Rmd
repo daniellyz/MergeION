@@ -33,32 +33,36 @@ download.file(paste0(url,original_files[4]),destfile="GMP.mzXML")
 
 ```R
 raw_data_files = c("MIX1.mzML","MIX2.mzXML","JNJ.mzXML")
-metadata_file = "https://raw.githubusercontent.com/daniellyz/MergeION/master/inst/library_metadata.csv"
+#metadata_file = "https://raw.githubusercontent.com/daniellyz/MergeION/master/inst/library_metadata.csv"
+metadata_file = "library_metadata.csv"
 
-mslevel = c(1,2)  # Both MS1 and MS2 scans are extracted! 
+mslevel = c(1,2) # Both MS1 and MS2 scans are extracted!
 MS2_type = c("DDA","DDA","Targeted") # Mode of MS/MS experiment for the three files
-isomers = F # If isomers are present, only the peak with higher TIC is extracted.
-adduct_type = c("M+H") # Only looking for classical M+H ions
-max.charge = 1 # Only looking for +1 charged ions
+adduct_type = c("Default") # Only looking for default ion types (ion types provided by users in metadata)
+max.charge = 1
 
+isomers = F # If isomers are present, only the peak with higher TIC is extracted.
+normalized = T
 rt_search = 12 # Retention time tolerance (s)
 ppm_search = 10  # Mass tolerance (ppm)
-baseline = 1000  # Absolute intensity threshold 1000 is fixed for 3 datasets. 
+baseline = 1000  # Baseline level 1000 is fixed for 3 datasets.
 relative = 1 # Relative intensitiy level 1% is fixed. All peaks under both baseline and relative level are considered as noise.
-normalized = T # Normalize the intensity of each scan to 100 (highest peak)
 
-write_files = F # The library(mgf) and metadata will not be writen in user's folder 
-input_library = "" # A brand new library, there's no previous dependency. "" or null
-output_library = "library_V1.mgf"
+write_files = F # The library(mgf) and metadata will not be writen in user's folder
+input_library = "" # A brand new library, there's no previous dependency
+output_library = "library_V1.mgf" # Name of the library
 user_name = "Adrem" # User name for uploading
 
-library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, isomers, adduct_type, max.charge,                              rt_search, ppm_search, baseline, relative, normalized, 
-                             user = user_name, write_files, input_library, output_library)
+# Generating the spectra library:
+library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, isomers, adduct_type, max.charge, rt_search, ppm_search, baseline, relative, normalized, user = user_name, write_files, input_library, output_library)
+
+library1 = library1$complete # Important! We extract the library object. "$complete" for extracting the entire library including historical mass spectra. Here since we create a brand-new library, "library1$complete" and "library1$current" are the same. 
+
 ```
 # Writing library files
 
 ```R
-# Writing the library file (.mgf):
+# Writing the library (.mgf):
 output_library = "library_V1.mgf" 
 writeMGF2(library1,output_library) 
 
@@ -96,17 +100,33 @@ input_library = library1
 output_library = "library_V2.mgf"
 user_name = "Daniel"
 
-library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, isomers, adduct_type, max.charge,
-                             rt_search, ppm_search, baseline, relative, normalized,
-                             user = user_name, write_files, input_library, output_library)
+library2 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, isomers, adduct_type, max.charge, rt_search, ppm_search, baseline, relative, normalized, user = user_name, write_files, input_library, output_library)
+
 ```
-
-Two new files should appear in the working directory: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
-
-# Summary of library2
+Two new files should appear in the working directory that contain historical and updated scans: 1) Library file "library_V2.mgf". 2) "library_V2.mgf.txt".
 
 ```R
-library_reporter(library2)
+# Extract and newly added scans:
+
+tmp_library = library2$current
+
+# Now we check in the newly added scans whether the desired precursor mz is in: 
+
+query = library_manager(tmp_library, query = c("PEPMASS = 478.096"), ppm_search = 20)
+
+library_visualizer(query)
+
+# Summary of newly-added spectra:
+
+library_reporter(library2$current)
+
+# Summary of entire updated spectra library:
+
+library_reporter(library2$complete)
+
+# From now on, library2 is the entire library:
+
+library2 = library2$complete 
 
 ```
 

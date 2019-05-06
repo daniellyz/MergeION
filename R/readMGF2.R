@@ -17,6 +17,10 @@
 #'
 readMGF2<-function(con){
 
+
+  options(stringsAsFactors = FALSE)
+  options(warn=-1)
+
   if (is.character(con)){
     if (file_ext(con)!="mgf"){
       stop("The file extension of your input library must be mgf!")

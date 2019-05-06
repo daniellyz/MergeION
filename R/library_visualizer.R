@@ -18,7 +18,7 @@
 #' @importFrom MSnbase fData readMgfData
 #' @importFrom graphics plot title legend abline text
 #'
-library_visualizer<-function(query, query.mode=c("found","remained"), max.plot=1){
+library_visualizer<-function(query, query.mode=c("found","remained"), max.plot=0){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -44,11 +44,15 @@ library_visualizer<-function(query, query.mode=c("found","remained"), max.plot=1
 
   if (query.mode == "found"){
     metadata = query$SELECTED_LIBRARY$metadata
-    spectrum_list = query$SELECTED_LIBRARY$sp}
+    spectrum_list = query$SELECTED_LIBRARY$sp
+    if (max.plot==0){max.plot = nrow(metadata)}
+  }
 
   if (query.mode == "remained"){
     metadata = query$LEFT_LIBRARY$metadata
-    spectrum_list = query$LEFT_LIBRARY$sp}
+    spectrum_list = query$LEFT_LIBRARY$sp
+    if (max.plot==0){max.plot = nrow(metadata)}
+  }
 
   ##############
   ### Visualize:
@@ -71,6 +75,8 @@ library_visualizer<-function(query, query.mode=c("found","remained"), max.plot=1
         yrange = c(0, max(spectrum[ranges,2])*1.2)}
 
       spectrum = spectrum[ranges,]
+      if (length(ranges)==1){spectrum = matrix(spectrum, ncol=2)}
+
       plot(spectrum[,1],spectrum[,2], type = "h", xlim = xrange, ylim = yrange,
            xlab = "m/z", ylab = "Intensity", font.lab=2)
 

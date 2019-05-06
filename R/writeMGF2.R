@@ -22,11 +22,16 @@
 #'
 writeMGF2 <- function(library, con) {
 
- if (is.list(library)){
+  options(stringsAsFactors = FALSE)
+  options(warn=-1)
+
+  if (is.list(library)){
+    if (length(library)==2 & "complete" %in% names(library2)){
+      library = library$complete
+    }
     if (length(library)!=2 || (!is.list(library$sp)) || !is.data.frame(library$metadata)){
-      stop("Please make sure your input library is a valid output of library_generator() or readMGF2()!")
-    }} else {stop("Please make sure your input library is a valid output of library_generator() or readMGF2()!")
-  }
+      stop("Please make sure your input library is a valid output of library_generator()!")
+    }}
 
  if (is.character(con)){
     if (file_ext(con)!="mgf"){
