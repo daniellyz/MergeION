@@ -25,7 +25,7 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
     }}
 
   if (is.list(library)){
-    if (length(library)==2 & "complete" %in% names(library2)){
+    if (length(library)==2 & "complete" %in% names(library)){
       library = library$complete
     }
     if (length(library)!=2 || (!is.list(library$sp)) || !is.data.frame(library$metadata)){

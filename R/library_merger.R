@@ -49,6 +49,9 @@ library_merger<-function(library, method = c("consensus","common_peaks","max_tic
     }}
 
   if (is.list(library)){
+    if (length(library)==2 & "complete" %in% names(library)){
+      library = library$complete
+    }
     if (length(library)!=2 || (!is.list(library$sp)) || !is.data.frame(library$metadata)){
       stop("Please make sure your input library is a valid output of library_generator()!")
     }}

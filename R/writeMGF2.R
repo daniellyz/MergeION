@@ -26,7 +26,7 @@ writeMGF2 <- function(library, con) {
   options(warn=-1)
 
   if (is.list(library)){
-    if (length(library)==2 & "complete" %in% names(library2)){
+    if (length(library)==2 & "complete" %in% names(library)){
       library = library$complete
     }
     if (length(library)!=2 || (!is.list(library$sp)) || !is.data.frame(library$metadata)){
