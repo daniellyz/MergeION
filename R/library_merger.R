@@ -185,7 +185,9 @@ library_merger<-function(library, method = c("consensus","common_peaks","max_tic
   library$sp = new_spectrum_list
   library$metadata = cbind.data.frame(new_meta_data, POST_PROCECSSING = method)
 
-  writeMGF2(library,output_library)
-  write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
+  if (output_library!=""){
+    writeMGF2(library,output_library)
+    write.table(library$metadata,paste0(output_library,".txt"),col.names = T,row.names=F,dec=".",sep="\t")
+  }
   return(library)
 }
