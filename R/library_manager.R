@@ -9,10 +9,8 @@
 #' @param rt_search Numeric. Retention time tolerance in second (although rt in the query and metadata in min). Only used when searching by retention time "RT=..."
 #' @return
 #' \itemize{
-#'  \item{"SELECTED_SCANS" ~ Numeric vector. Selected scans numbers.}
-#'  \item{"LEFT_SCANS" ~ Numeric vector. Unselected scans numbers.}
-#'  \item{"SELECTED_LIBRARY"} ~ Library object that only contain selected scans
-#'  \item{"LEFT_LIBRARY"} ~ Library object that only contain unselected scans
+#'  \item{"SELECTED"} ~ Library object that only contain selected scans
+#'  \item{"LEFT"} ~ Library object that only contain unselected scans
 #' }
 #'
 #' @examples
@@ -20,13 +18,13 @@
 #' query = library_manager(library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"), logical="AND", rt_search=6)
 #'
 #' # Create a new library from query:
-#' new_library1 = query$SELECTED_LIBRARY
+#' new_library1 = query$SELECTED
 #' # Remove scans from current library according to query:
-#' new_library2 = query$LEFT_LIBRARY
+#' new_library2 = query$LEFT
 #'
 #' # Addd another filter:
 #' query = library_manager(new_library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"))
-#' new_library3 = query$SELECTED_LIBRARY
+#' new_library3 = query$SELECTED
 #'
 #' @export
 #'
@@ -129,17 +127,13 @@ library_manager<-function(library, query = "", logical = c("AND","OR"), ppm_sear
   NN = 1:length(spectrum_list)
   left_list = setdiff(NN, indexes_list)
 
-  SELECTED_SCANS = metadata$SCANS[indexes_list]
-  LEFT_SCANS= metadata$SCANS[left_list]
-
   SELECTED_LIBRARY = LEFT_LIBRARY = library
   SELECTED_LIBRARY$sp = library$sp[indexes_list]
   SELECTED_LIBRARY$metadata = library$metadata[indexes_list,]
   LEFT_LIBRARY$sp = library$sp[left_list]
   LEFT_LIBRARY$metadata = library$metadata[left_list,]
 
-  return(list(SELECTED_SCANS = SELECTED_SCANS, LEFT_SCANS = LEFT_SCANS,
-              SELECTED_LIBRARY = SELECTED_LIBRARY, LEFT_LIBRARY = LEFT_LIBRARY))
+  return(list(SELECTED = SELECTED_LIBRARY, LEFT = LEFT_LIBRARY))
 }
 
 ############################
@@ -147,5 +141,6 @@ library_manager<-function(library, query = "", logical = c("AND","OR"), ppm_sear
 ###########################
 
 ppm_distance<-function(x,y){
-  return(abs((x-y)/y*1000000))}
+  return(abs((x-y)/y*1000000))
+}
 

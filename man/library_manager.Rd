@@ -20,10 +20,8 @@ library_manager(library, query = "", logical = c("AND", "OR"),
 }
 \value{
 \itemize{
- \item{"SELECTED_SCANS" ~ Numeric vector. Selected scans numbers.}
- \item{"LEFT_SCANS" ~ Numeric vector. Unselected scans numbers.}
- \item{"SELECTED_LIBRARY"} ~ Library object that only contain selected scans
- \item{"LEFT_LIBRARY"} ~ Library object that only contain unselected scans
+ \item{"SELECTED"} ~ Library object that only contain selected scans
+ \item{"LEFT"} ~ Library object that only contain unselected scans
 }
 }
 \description{
@@ -34,12 +32,12 @@ The function queries and selects or removes scans from the spectral library that
 query = library_manager(library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"), logical="AND", rt_search=6)
 
 # Create a new library from query:
-new_library1 = query$SELECTED_LIBRARY
+new_library1 = query$SELECTED
 # Remove scans from current library according to query:
-new_library2 = query$LEFT_LIBRARY
+new_library2 = query$LEFT
 
 # Addd another filter:
 query = library_manager(new_library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"))
-new_library3 = query$SELECTED_LIBRARY
+new_library3 = query$SELECTED
 
 }
