@@ -7,18 +7,21 @@
 #' @param method Character. Method to compare the similarity between query spectrum and library spectra.
 #' \itemize{
 #'   \item{Simple:}{ Counting number of fragment matches}
-#'   \item{Nloss:}{ Conting number of fragment and neutral loss matches.}
+#'   \item{All:}{ Conting number of fragment and neutral loss matches.}
 #'   \item{Cosine:}{ cosine similarity score from OrgMassSpecR package.}
 #' }
 #' @param prec_mz Numeric. Precursor mass of query spectrum (if known). Set to 0 if precursor mass is not used as a criterion of library search. Default value is 0.
 #' @param ppm_search Numeric. Mass tolerance in ppm for precursor/fragment search.
-#' @param relative Numeric between 0 and 100. The relative intensity threshold % of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.
+#' @param relative Numeric between 0 and 100. The relative intensity threshold of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.
+#' @param mirror.plot Boolean. True if the query-library comparison is visualized as mirror plot
 #' @param png.out Boolean. True if plotted mirror spectra are exported as png images!
 #'
 #' @return
 #' \itemize{
 #'    \item{<plot>:}{ Comparing query spectrum to ordered "hits" in the spectrum library}
-#'    \item{<LIBRARY>:}{ Library object that contain found scans.}
+#'    \item{SELECTED:}{ Library object that contain found scans.}
+#'    \item{ID_SELECTED:}{ IDs of found compounds.}
+#'    \item{SCORES:}{ Similarity scores between query spectrum and each }
 #' }
 #'
 #' @author Youzhong Liu, \email{Youzhong.Liu@uantwerpen.be}
@@ -27,7 +30,10 @@
 #'
 #' data(DRUG_THERMO_LIBRARY)
 #' dat = cbind(c(136.073,149.071,151.0991,180.047),c(1,1,20,3))
-#' matched = library_similarity(library2, dat, method = "Cosine", prec_mz = 0, ppm_search = 20, relative = 1)
+#' query = library_similarity(library2, dat, method = "Cosine", prec_mz = 0, ppm_search = 20, relative = 1, mirror.plot = F)
+#'
+#' # Query-library comparison via mirror plot:
+#' library_visualizer_similarity(query$SELECTED, id= query$ID_SELECTED[1], query_spectrum = dat)
 #'
 #' @importFrom MSnbase fData readMgfData
 #' @importFrom tools file_ext
@@ -36,8 +42,8 @@
 #'
 #' @export
 
-library_similarity<-function(library, query_spectrum=NULL , method = c("Simple", "Nloss", "Cosine"),
-              prec_mz = 0, ppm_search = 20, relative = 1, png.out=F){
+library_similarity<-function(library, query_spectrum=NULL , method = c("Simple", "All", "Cosine"),
+              prec_mz = 0, ppm_search = 20, relative = 1, mirror.plot = T, png.out=F){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -71,7 +77,7 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
     }
   }
 
-  if ((prec_mz == 0) && (method == "Nloss")){
+  if ((prec_mz == 0) && (method == "All")){
     stop("Please provide the precursor mass if neutral loss are considered!")
   }
 
@@ -79,9 +85,11 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
     query = paste0("PEPMASS = ", prec_mz)
     library = library_manager(library, query = query, ppm_search = ppm_search)
     library = library$SELECTED # Filter library according to precursor mass
-
     if (nrow(library$metadata)==0){stop("No record with specified precursor mass found!")}
   }
+
+  library = library_manager(library, query = "MSLEVEL = 1")$LEFT
+  if (nrow(library$metadata)==0){stop("No MS/MS records!")}
 
   ###############################
   ### Preprocess query spectrum:
@@ -99,7 +107,7 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
 
   if (length(selected)>0){
     dat = dat[selected,]
-    dat = data.matrix(matrix(dat,ncol=2))
+    #dat = data.matrix(matrix(dat,ncol=2))
     abs_search = ppm_search/1000000*median(dat[,1]) # Da window for spectra search
   } else {
     stop("Spectrum not valid!")
@@ -110,7 +118,8 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
   #####################################
 
   if (is.character(library)){ # If input is a mgf file name
-    library=readMGF2(library)}
+    library=readMGF2(library)
+  }
 
   metadata = library$metadata
   spectrum_list = library$sp
@@ -133,7 +142,7 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
       sim_scores[i] = sum(dist_spec<=abs_search)
      }
 
-    if (method == "Nloss"){
+    if (method == "All"){
       dist_spec = abs(sapply(spectrum_list[[i]][,1], "-", dat[,1]))
       dist_loss = abs(sapply(nloss_list[[i]], "-", prec_mz - dat[,1]))
       sim_scores[i] = sum(dist_spec<=abs_search) + sum(dist_loss<=abs_search)
@@ -158,18 +167,23 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
     SELECTED_LIBRARY = list()
     SELECTED_LIBRARY$sp = library$sp[indexes]
     SELECTED_LIBRARY$metadata = library$metadata[indexes,]
+    sim_scores = sim_scores[indexes]
 
   # Plot:
-    for (i in 1:length(indexes)){
+    if (mirror.plot){
+      for (i in 1:length(indexes)){
 
-      if (png.out){png(paste0("SIM_SCAN_", SELECTED_LIBRARY$metadata$SCANS[i],".png"), width = 700, height = 480)}
-      bottom.label = paste0("Library spectrum of ID = ", SELECTED_LIBRARY$metadata$ID[i])
-      xlim = c(min(dat[,1])*0.8, max(dat[,1])*1.2)
-      SpectrumSimilarity(dat, SELECTED_LIBRARY$sp[[i]], top.label="Query spectrum",bottom.label= bottom.label,xlim=xlim, print.graphic = T)
+        if (png.out){png(paste0("SIM_SCAN_", SELECTED_LIBRARY$metadata$SCANS[i],".png"), width = 700, height = 480)}
+        bottom.label = paste0("Library spectrum of ID = ", SELECTED_LIBRARY$metadata$ID[i])
+        xlim = c(min(dat[,1])*0.8, max(dat[,1])*1.2)
+        SpectrumSimilarity(dat, SELECTED_LIBRARY$sp[[i]], top.label="Query spectrum",bottom.label= bottom.label,xlim=xlim, print.graphic = T)
 
-      if (png.out){dev.off()}
+        if (png.out){dev.off()}
+      }
     }
   }
 
-  return(SELECTED_LIBRARY)
+  return(list(SELECTED = SELECTED_LIBRARY,
+         ID_SELECTED = unique(SELECTED_LIBRARY$metadata$ID),
+         SCORES = sim_scores))
 }
