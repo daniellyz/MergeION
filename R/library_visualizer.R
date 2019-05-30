@@ -81,9 +81,12 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F){
   if (nrow(metadata1)>0){
 
     scan1 = max(as.numeric(metadata1$SCANS)) # Scan selected
-    metadata1 = metadata[as.numeric(metadata$SCANS)==scan1,]
-    spectrum1 = spectrum_list[[which(as.numeric(metadata$SCANS)==scan1)]]
-    prec_mz = round(as.numeric(metadata1$PEPMASS[1]),3)
+    ind1 = which(as.numeric(metadata$SCANS)==scan1)
+
+    metadata1 = metadata[ind1,]
+    spectrum1 = spectrum_list[[ind1]]
+    prec_mz = round(as.numeric(metadata[ind1,"PEPMASS"]),3)
+    adduct1 = metadata$ADDUCT[ind1]
 
     xrange = c(prec_mz-2,prec_mz+8)
     ranges = which((spectrum1[,1]>=prec_mz-2) & (spectrum1[,1]<=prec_mz+8))
@@ -101,18 +104,22 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F){
 
     title(main = paste0("ID: ",id, " ; SCAN: ", scan1),
           font = 3, cex.main = 1.5)
-    legend("bottomleft", bty = "n", cex = 1.2, text.font = 1.5,
+    legend("topleft", bty = "n", cex = 1.2, text.font = 1.5,
            legend = paste0(
              "Precursor: ", prec_mz,  "\n",
+             "Adduct: ", adduct1, "\n",
              "MS Level: 1"))
   }
 
   if (nrow(metadata2)>0){
 
     scan2 = max(as.numeric(metadata2$SCANS)) # Scan selected
-    metadata2 = metadata[as.numeric(metadata2$SCANS)==scan2,]
-    spectrum2 = spectrum_list[[which(as.numeric(metadata$SCANS)==scan2)]]
-    prec_mz = round(as.numeric(metadata2$PEPMASS[1]),3)
+    ind2 = which(as.numeric(metadata$SCANS)==scan2)
+
+    metadata2 = metadata[ind2,]
+    spectrum2 = spectrum_list[[ind2]]
+    prec_mz = round(as.numeric(metadata[ind2,"PEPMASS"]),3)
+    adduct2 = metadata$ADDUCT[ind2]
 
     xrange = c(50,prec_mz+8)
     ranges = which((spectrum2[,1]>=50) & (spectrum2[,1]<=prec_mz+8))
@@ -133,9 +140,10 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F){
 
     title(main = paste0("ID: ", id, " ; SCAN: ", scan2),
           font = 3, cex.main = 1.5)
-    legend("bottomleft", bty = "n", cex = 1.2, text.font = 1.5,
+    legend("topleft", bty = "n", cex = 1.2, text.font = 1.5,
             legend = paste0(
             "Precursor: ", prec_mz,  "\n",
+            "Adduct: ", adduct2, "\n",
             "MS Level: 2"))
     abline(v = prec_mz, col = "red")
    }

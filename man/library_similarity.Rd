@@ -24,7 +24,7 @@ library_similarity(library, query_spectrum = NULL, method = c("Simple",
 
 \item{ppm_search}{Numeric. Mass tolerance in ppm for precursor/fragment search.}
 
-\item{relative}{Numeric between 0 and 100. The relative intensity threshold % of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.}
+\item{relative}{Numeric between 0 and 100. The relative intensity threshold of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.}
 
 \item{png.out}{Boolean. True if plotted mirror spectra are exported as png images!}
 }
@@ -43,4 +43,7 @@ data(DRUG_THERMO_LIBRARY)
 dat = cbind(c(136.073,149.071,151.0991,180.047),c(1,1,20,3))
 matched = library_similarity(library2, dat, method = "Cosine", prec_mz = 0, ppm_search = 20, relative = 1)
 
+}
+\author{
+Youzhong Liu, \email{Youzhong.Liu@uantwerpen.be}
 }

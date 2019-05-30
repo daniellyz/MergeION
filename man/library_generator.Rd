@@ -75,7 +75,7 @@ mslevel = c(1,2)  # Both MS1 and MS2 scans are extracted!
 MS2_type = c("DDA","DDA","Targeted") # Mode of MS/MS experiment for the three files
 adduct_type = c("Default") # Only looking for default ion types (ion types provided by users in metadata)
 max.charge = 1 # Only looking for +1 charged ions
-isomers = F # If isomers are present, only the peak with higher TIC is extracted.
+isomers = FALSE # If isomers are present, only the peak with higher TIC is extracted.
 
 rt_search = 12 # Retention time tolerance (s)
 ppm_search = 10  # Mass tolerance (ppm)
@@ -98,9 +98,9 @@ library1 = library1$complete # Important! We extract the library object. "$compl
 raw_data_files = "GMP.mzXML"
 adduct_type = c("M+H", "M+Na") # Two adduct types are now considered
 MS2_type = "Targeted"
-isomers = T # We would like now to record all isomers in the library
+isomers = TRUE # We would like now to record all isomers in the library
 
-write_files = T # We want to directly write the library mgf + metadata files
+write_files = TRUE # We want to directly write the library mgf + metadata files
 input_library = library1
 output_library = "library_V2.mgf"
 user_name = "Thomas" # Another user adds records into the library
