@@ -130,19 +130,37 @@ library2 = library2$complete
 
 ```
 
-# Managing the library
+# Searching the library
 
-The mass 279.094 is detected in both MIX1 and MIX2. We can remove the scans in MIX2 from the library: 
+Searching in the raw data Mix2 the precursor mass 279.094:
 
 ```R
 # We first query scans of the precursor mass detected in MIX2 from library2:
 query = library_manager(library2, query = c("PEPMASS = 279.094", "FILENAME=MIX2.mzXML"), logical = "AND", ppm_search = 20)
 
-# Visualized scans found:
-library_visualizer(query$SELECTED, max.plot = 3)
+# Create a summary of compound found:
+library_reporter(query$SELECTED)
 
-# Create a new library WITHOUT scans found (removing found scans):
-library3 = query$LEFT
+# ID (structure) of compounds selected:
+id_found = query$ID_SELECTED
+
+# Visualized spectra of the first compound (ID) found:
+library_visualizer(query$SELECTED, id = id_found[1])
+
+# Visualized compound (ID) by compound the spectra found:
+
+for (id in id_found){
+ library_visualizer(query$SELECTED, id = id)
+}
 
 ```
 ![choose](search.png)
+
+# Managing the library
+
+The mass 279.094 is detected in both MIX1 and MIX2. We can remove the scans in MIX2 from the library by creating a new library WITHOUT scans found:
+
+```R
+library3 = query$LEFT
+library_reporter(library3)
+```

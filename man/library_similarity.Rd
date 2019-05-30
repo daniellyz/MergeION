@@ -5,7 +5,7 @@
 \title{Matching query spectrum to existing library}
 \usage{
 library_similarity(library, query_spectrum = NULL, method = c("Simple",
-  "Cosine"), prec_mz = 0, ppm_search = 20, relative = 1,
+  "Nloss", "Cosine"), prec_mz = 0, ppm_search = 20, relative = 1,
   png.out = F)
 }
 \arguments{
@@ -13,7 +13,12 @@ library_similarity(library, query_spectrum = NULL, method = c("Simple",
 
 \item{query_spectrum}{Two-column data matrix. Two columns represent m/z and intensity of query tandem spectrum}
 
-\item{method}{Character. Method to compare the similarity between query spectrum and library spectra. "Simple": counting number of fragment matches. "Cosine": cosine similarity score from OrgMassSpecR package.}
+\item{method}{Character. Method to compare the similarity between query spectrum and library spectra.
+\itemize{
+  \item{Simple:}{ Counting number of fragment matches}
+  \item{Nloss:}{ Conting number of fragment and neutral loss matches.}
+  \item{Cosine:}{ cosine similarity score from OrgMassSpecR package.}
+}}
 
 \item{prec_mz}{Numeric. Precursor mass of query spectrum (if known). Set to 0 if precursor mass is not used as a criterion of library search. Default value is 0.}
 
@@ -24,13 +29,17 @@ library_similarity(library, query_spectrum = NULL, method = c("Simple",
 \item{png.out}{Boolean. True if plotted mirror spectra are exported as png images!}
 }
 \value{
-Plots that compare query spectrum to ordered "hits" in the spectrum library; Library object that contain found scans.
+\itemize{
+   \item{<plot>:}{ Comparing query spectrum to ordered "hits" in the spectrum library}
+   \item{<LIBRARY>:}{ Library object that contain found scans.}
+}
 }
 \description{
 The function searches unknown MS/MS spectra in a spectral library
 }
 \examples{
-# Query spectrum:
+
+data(DRUG_THERMO_LIBRARY)
 dat = cbind(c(136.073,149.071,151.0991,180.047),c(1,1,20,3))
 matched = library_similarity(library2, dat, method = "Cosine", prec_mz = 0, ppm_search = 20, relative = 1)
 

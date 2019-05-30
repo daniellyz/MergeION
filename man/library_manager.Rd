@@ -20,23 +20,32 @@ library_manager(library, query = "", logical = c("AND", "OR"),
 }
 \value{
 \itemize{
- \item{"SELECTED"} ~ Library object that only contain selected scans
- \item{"LEFT"} ~ Library object that only contain unselected scans
+ \item{SELECTED:}{ Library object that only contain selected scans}
+ \item{ID_SELECTED:}{ IDs of selected scans}
+ \item{LEFT:}{ Library object that only contain unselected scans}
+ \item{ID_SELECTED:}{ IDs of unnselected scans}
 }
 }
 \description{
 The function queries and selects or removes scans from the spectral library that satisfy user-defined conditions (query metadata)
 }
 \examples{
+
+data(DRUG_THERMO_LIBRARY)
+
 # Search library using query command lines:
-query = library_manager(library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"), logical="AND", rt_search=6)
+query = library_manager(library2,query=c("IONMODE=Positive","RT=1.2"), logical="AND", rt_search=6)
 
 # Create a new library from query:
 new_library1 = query$SELECTED
+
+# Summary of found compounds:
+library_reporter(new_library1)
+
 # Remove scans from current library according to query:
 new_library2 = query$LEFT
 
-# Addd another filter:
+# Add another filter:
 query = library_manager(new_library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"))
 new_library3 = query$SELECTED
 

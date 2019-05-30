@@ -12,7 +12,7 @@
 #' @param rt_search Retention time search tolerance (in second) for targeted RT
 #' @param ppm_search m/z search tolerance (in ppm) for targeted m/z
 #' @param baseline Numeric. The absolute intensity threshold) that is considered as a mass peak and written into the library. Peaks above both absolute and relative thresholds are saved in the library.
-#' @param relative Numeric between 0 and 100. The relative intensity threshold % of the highest peak in each spectrum). Peaks above both absolute and relative thresholds are saved in the library
+#' @param relative Numeric between 0 and 100. The relative intensity threshold of the highest peak in each spectrum). Peaks above both absolute and relative thresholds are saved in the library
 #' @param normalized Logical. TRUE if the intensities of extracted spectra need to normalized so that the intensity of highest peak will be 100
 #' @param user Character. Name or ID of the user(s) that created or updated the library.
 #' @param write_files Logical. TRUE if user wishes to write the mgf and metadata (txt) file in the folder
@@ -21,16 +21,15 @@
 #'
 #' @return
 #' \itemize{
-#'   \item{"library$complete" ~ Entire spectra library (historical + newly added records) is a list object of two elements: "library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity; "library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
-#'   \item{"library$current" ~ Temporary spectra library that only contains newly added scans. }
-#'   \item{"<ouput_library>" ~ A mgf spectral library file (complete spectralibrary) will be written in user's working directory. It contains both spectra and metadata}
-#'   \item{"<ouput_library.txt>" ~ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
+#'   \item{complete:}{ Entire spectra library (historical + newly added records) is a list object of two elements: "library$sp" ~ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity; "library$metadata" ~ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following metadata columns are added: FILENAME (which raw data file the scan is isolated), MSLEVEL (1 or 2), TIC, PEPMASS_DEV (ppm error for detected precursor mass) and SCANNUMBER (scan number in raw chromatogram). Parameters used for library generation were appended. The last three columns were PARAM_USER (user name), PARAM_CREATION_TIME (date and time when the MS record was added) and SCANS (unique identifier for each record, unchanged) }
+#'   \item{current:}{ Temporary spectra library that only contains newly added scans.}
+#'   \item{<ouput_library>:}{ A mgf spectral library file (complete spectralibrary) will be written in user's working directory. It contains both spectra and metadata}
+#'   \item{<ouput_library.txt>:}{ Metadata will be written as a tab-seperated .txt file in user's working directory. Users can check this file in excel or open office.}
 #' }
 #'
 #' @author Youzhong Liu, \email{Youzhong.Liu@uantwerpen.be}
 #'
 #' @examples
-
 #' ### We download four test data sets:
 #'
 #' url = "https://zenodo.org/record/2581847/files/"
@@ -51,23 +50,22 @@
 #' MS2_type = c("DDA","DDA","Targeted") # Mode of MS/MS experiment for the three files
 #' adduct_type = c("Default") # Only looking for default ion types (ion types provided by users in metadata)
 #' max.charge = 1 # Only looking for +1 charged ions
-#' isomers = F # If isomers are present, only the peak with higher TIC is extracted.
+#' isomers = FALSE # If isomers are present, only the peak with higher TIC is extracted.
 #'
 #' rt_search = 12 # Retention time tolerance (s)
 #' ppm_search = 10  # Mass tolerance (ppm)
 #' baseline = 1000  # Baseline level 1000 is fixed for 3 datasets.
 #' relative = 1 # Relative intensitiy level 1% is fixed. All peaks under both baseline and relative level are considered as noise.
-#' normalized = T # The intensities of extracted spectra will be normalized to 100 (the highest peak)
+#' normalized = TRUE # The intensities of extracted spectra will be normalized to 100 (the highest peak)
 #'
-#' write_files = F # The library(mgf) and metadata will not be writen in user's folder
+#' write_files = FALSE # The library(mgf) and metadata will not be writen in user's folder
 #' input_library = "" # A brand new library, there's no previous dependency
 #' output_library = "library_V1.mgf" # Name of the library
-#' user_name = "Sara" # User name for uploading
+#' user_name = "Florian" # User name for uploading
 #'
 #' library1 = library_generator(raw_data_files, metadata_file, mslevel, MS2_type, adduct_type, max.charge, isomers,
 #'                             rt_search, ppm_search, baseline, relative, normalized,
 #'                             user = user_name, write_files, input_library, output_library)
-#'
 #'
 #' library1 = library1$complete # Important! We extract the library object. "$complete" for extracting the entire library including historical mass spectra. Here since we create a brand-new library, "library1$complete" and "library1$current" are the same.
 #'
@@ -75,9 +73,9 @@
 #' raw_data_files = "GMP.mzXML"
 #' adduct_type = c("M+H", "M+Na") # Two adduct types are now considered
 #' MS2_type = "Targeted"
-#' isomers = T # We would like now to record all isomers in the library
+#' isomers = TRUE # We would like now to record all isomers in the library
 #'
-#' write_files = T # We want to directly write the library mgf + metadata files
+#' write_files = TRUE # We want to directly write the library mgf + metadata files
 #' input_library = library1
 #' output_library = "library_V2.mgf"
 #' user_name = "Thomas" # Another user adds records into the library
@@ -100,6 +98,7 @@
 #' @importFrom pracma findpeaks
 #'
 #' @export
+#'
 #'
 library_generator<-function(raw_data_files, metadata_file, mslevel = c(1,2),
                             MS2_type = "DDA", isomers = TRUE, adduct_type = "M+H", max.charge = 1,

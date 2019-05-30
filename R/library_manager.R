@@ -9,20 +9,29 @@
 #' @param rt_search Numeric. Retention time tolerance in second (although rt in the query and metadata in min). Only used when searching by retention time "RT=..."
 #' @return
 #' \itemize{
-#'  \item{"SELECTED"} ~ Library object that only contain selected scans
-#'  \item{"LEFT"} ~ Library object that only contain unselected scans
+#'  \item{SELECTED:}{ Library object that only contain selected scans}
+#'  \item{ID_SELECTED:}{ IDs of selected scans}
+#'  \item{LEFT:}{ Library object that only contain unselected scans}
+#'  \item{ID_SELECTED:}{ IDs of unnselected scans}
 #' }
 #'
 #' @examples
+#'
+#' data(DRUG_THERMO_LIBRARY)
+#'
 #' # Search library using query command lines:
-#' query = library_manager(library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"), logical="AND", rt_search=6)
+#' query = library_manager(library2,query=c("IONMODE=Positive","RT=1.2"), logical="AND", rt_search=6)
 #'
 #' # Create a new library from query:
 #' new_library1 = query$SELECTED
+#'
+#' # Summary of found compounds:
+#' library_reporter(new_library1)
+#'
 #' # Remove scans from current library according to query:
 #' new_library2 = query$LEFT
 #'
-#' # Addd another filter:
+#' # Add another filter:
 #' query = library_manager(new_library1,query=c("IONMODE=Positive","MSLEVEL=2","RT=1.2"))
 #' new_library3 = query$SELECTED
 #'
@@ -133,7 +142,8 @@ library_manager<-function(library, query = "", logical = c("AND","OR"), ppm_sear
   LEFT_LIBRARY$sp = library$sp[left_list]
   LEFT_LIBRARY$metadata = library$metadata[left_list,]
 
-  return(list(SELECTED = SELECTED_LIBRARY, LEFT = LEFT_LIBRARY))
+  return(list(SELECTED = SELECTED_LIBRARY, ID_SELECTED = unique(SELECTED_LIBRARY$metadata$ID),
+              LEFT = LEFT_LIBRARY, ID_LEFT = unique(LEFT_LIBRARY$metadata$ID)))
 }
 
 ############################

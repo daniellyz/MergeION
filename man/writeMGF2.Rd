@@ -9,9 +9,9 @@ writeMGF2(library, con)
 \arguments{
 \item{library}{List that contains 2 elements.
 \itemize{
- \item{"sp" ~ List of spectra ready to be written. Each spectrum is a data matrix with two columns: m/z and intensity.}
- \item{"metadata" ~ Data frame containing metadata corresponding to each "scan" in splist.}
- }}
+  \item{sp:}{ List of all extracted spectra. Each spectrum is a data matrix with two columns: m/z and intensity}
+  \item{metadata:}{ Data frame containing metadata of extracted scans. PEPMASS and RT are updated based on actually-detected scans. Following five columns are added: FILENAME, MSLEVEL, TIC, MASS_DEV, SCANNUMBER and SCANS}
+}}
 
 \item{con}{Name of the output library, the file extension must be mgf}
 }
@@ -19,11 +19,12 @@ writeMGF2(library, con)
 The function writes a dataframe of metadata and a list of spectra to a mgf file
 }
 \examples{
-# Read a library file:
-library = readMGF2("library_V2.mgf")
+
+data(DRUG_THERMO_LIBRARY)
+
 # Add new metadata "RESOLUTION = HIGH" to all scans:
-library$metadata$RESOLUTION = "HIGH"
+library2$metadata$RESOLUTION = "HIGH"
 # Write into a new mgf file:
-writeMGF2(library,"library_V2_bis.mgf")
+writeMGF2(library2,"library_V2_bis.mgf")
 
 }

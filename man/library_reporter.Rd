@@ -12,3 +12,9 @@ library_reporter(library)
 \description{
 The function generates a report from input spectral library
 }
+\examples{
+
+data(DRUG_THERMO_LIBRARY)
+library_reporter(library2)
+
+}
