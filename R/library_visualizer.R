@@ -104,19 +104,12 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
 
     title(main = paste0("ID: ",id, " ; SCAN: ", scan1),
           font = 3, cex.main = 1.5)
-<<<<<<< HEAD
     if (show.legend){
-=======
->>>>>>> ff435f5ac995c4d7150a759058054e3d3163c8ac
     legend("topleft", bty = "n", cex = 1.2, text.font = 1.5,
            legend = paste0(
              "Precursor: ", prec_mz,  "\n",
              "Adduct: ", adduct1, "\n",
-<<<<<<< HEAD
              "MS Level: 1"))}
-=======
-             "MS Level: 1"))
->>>>>>> ff435f5ac995c4d7150a759058054e3d3163c8ac
   }
 
   if (nrow(metadata2)>0){
@@ -148,7 +141,7 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
 
     title(main = paste0("ID: ", id, " ; SCAN: ", scan2),
           font = 3, cex.main = 1.5)
-<<<<<<< HEAD
+
     if (show.legend){
       legend("topleft", bty = "n", cex = 1.2, text.font = 1.5,
             legend = paste0(
@@ -156,13 +149,11 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
             "Adduct: ", adduct2, "\n",
             "MS Level: 2"))}
 
-=======
     legend("topleft", bty = "n", cex = 1.2, text.font = 1.5,
             legend = paste0(
             "Precursor: ", prec_mz,  "\n",
             "Adduct: ", adduct2, "\n",
             "MS Level: 2"))
->>>>>>> ff435f5ac995c4d7150a759058054e3d3163c8ac
     abline(v = prec_mz, col = "red")
    }
 

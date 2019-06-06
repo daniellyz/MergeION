@@ -25,11 +25,7 @@ library_similarity(library, query_spectrum = NULL, method = c("Simple",
 \item{ppm_search}{Numeric. Mass tolerance in ppm for precursor/fragment search.}
 
 \item{relative}{Numeric between 0 and 100. The relative intensity threshold of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.}
-<<<<<<< HEAD
-
 \item{mirror.plot}{Boolean. True if the query-library comparison is visualized as mirror plot}
-=======
->>>>>>> ff435f5ac995c4d7150a759058054e3d3163c8ac
 
 \item{png.out}{Boolean. True if plotted mirror spectra are exported as png images!}
 }
