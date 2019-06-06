@@ -13,10 +13,7 @@
 #' @param prec_mz Numeric. Precursor mass of query spectrum (if known). Set to 0 if precursor mass is not used as a criterion of library search. Default value is 0.
 #' @param ppm_search Numeric. Mass tolerance in ppm for precursor/fragment search.
 #' @param relative Numeric between 0 and 100. The relative intensity threshold of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.
-<<<<<<< HEAD
 #' @param mirror.plot Boolean. True if the query-library comparison is visualized as mirror plot
-=======
->>>>>>> ff435f5ac995c4d7150a759058054e3d3163c8ac
 #' @param png.out Boolean. True if plotted mirror spectra are exported as png images!
 #'
 #' @return

@@ -2,7 +2,7 @@
 % Please edit documentation in R/library_visualizer_similarity.R
 \name{library_visualizer_similarity}
 \alias{library_visualizer_similarity}
-\title{Matching query spectrum to existing library}
+\title{Visualizing query spectrum matched to existing library}
 \usage{
 library_visualizer_similarity(library, id = library$metadata$ID[1],
   query_spectrum = NULL, png.out = F)
@@ -18,7 +18,7 @@ library_visualizer_similarity(library, id = library$metadata$ID[1],
 Comparing query spectrum to "hits" in the spectrum library via mirror plot
 }
 \description{
-The function searches unknown MS/MS spectra in a spectral library
+The function generates the comparison plot between query spectrum and library
 }
 \author{
 Youzhong Liu, \email{Youzhong.Liu@uantwerpen.be}
