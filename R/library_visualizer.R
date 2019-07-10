@@ -76,7 +76,7 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
 
   if ((nrow(metadata1)>0) & (nrow(metadata2)>0)){
     par(mfrow = c(2,1), mar=c(2,2,2,2))  # Joint plot MS1 MS2
-  } else {par(mfrow = c(1,1), mar=c(2,2,2,2))}
+  } else {par(mar=c(2,2,2,2))}
 
   if (nrow(metadata1)>0){
 
@@ -87,8 +87,6 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
     spectrum1 = spectrum_list[[ind1]]
     prec_mz = round(as.numeric(metadata[ind1,"PEPMASS"]),3)
     adduct1 = metadata$ADDUCT[ind1]
-    cpd1 = "Unknown"
-    if ("COMPOUND" %in% colnames(metadata)){cpd1 = metadata$COMPOUND[ind1]}
 
     xrange = c(prec_mz-2,prec_mz+8)
     ranges = which((spectrum1[,1]>=prec_mz-2) & (spectrum1[,1]<=prec_mz+8))
@@ -104,7 +102,7 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
     int_pics = spectrum1[max_pics,2]*1.1
     text(text_pics, int_pics, as.character(round(text_pics,3)))
 
-    title(main = paste0("ID: ",id, " ; SCAN: ", scan1, " (", cpd1, ")"),
+    title(main = paste0("ID: ",id, " ; SCAN: ", scan1),
           font = 3, cex.main = 1.5)
     if (show.legend){
     legend("topleft", bty = "n", cex = 1.2, text.font = 1.5,
@@ -123,8 +121,6 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
     spectrum2 = spectrum_list[[ind2]]
     prec_mz = round(as.numeric(metadata[ind2,"PEPMASS"]),3)
     adduct2 = metadata$ADDUCT[ind2]
-    cpd2 = "Unknown"
-    if ("COMPOUND" %in% colnames(metadata)){cpd2 = metadata$COMPOUND[ind2]}
 
     xrange = c(50,prec_mz+8)
     ranges = which((spectrum2[,1]>=50) & (spectrum2[,1]<=prec_mz+8))
@@ -143,7 +139,7 @@ library_visualizer<-function(library, id = library$metadata$ID[1], png.out=F, sh
     int_pics = spectrum2[max_pics,2]*1.1
     text(text_pics, int_pics, as.character(round(text_pics,3)))
 
-    title(main = paste0("ID: ", id, " ; SCAN: ", scan2, " (", cpd2, ")"),
+    title(main = paste0("ID: ", id, " ; SCAN: ", scan2),
           font = 3, cex.main = 1.5)
 
     if (show.legend){

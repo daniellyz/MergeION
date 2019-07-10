@@ -5,20 +5,17 @@
 \title{Generating spectral library from raw LC-MS/MS chromatograms}
 \usage{
 library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
-  MS1.screener = FALSE, MS2_type = "DDA", isomers = TRUE,
-  adduct_type = "M+H", max.charge = 1, rt_search = 12,
-  ppm_search = 20, baseline = 1000, relative = 5, snthreshold = 30,
-  normalized = T, user = "", write_files = TRUE,
+  MS2_type = "DDA", isomers = TRUE, adduct_type = "M+H",
+  max.charge = 1, rt_search = 12, ppm_search = 20, baseline = 1000,
+  relative = 5, normalized = T, user = "", write_files = TRUE,
   input_library = "", output_library = "")
 }
 \arguments{
 \item{raw_data_files}{A character vector of file names of chromatograms from which scans are extracted. All files must have be in centroid-mode with mzML or mzMXL extension!}
 
-\item{metadata_file}{A single character or NULL. If provided, it must be the metadata file name with csv extension. The first six columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl"), "CHARGE" (charge number, please keep it at 1) and "ID" (A unique identifier for targeted compounds in spectral library). If NULL, please set MS1.screener = TRUE, a non-targeted feature screening will be performed using MatchedFilter from XCMS. In current release, this functionality only works when all input files are acquired on the same instrument and from the same ion mode, and they must all contain MS1 scans.}
+\item{metadata_file}{A single character or NULL (not recommended). If provided, it must be the metadata file name with csv extension. The first five columns of the metadata must be (in order): "PEPMASS" (precursor masses that we want to find in chromatograms), "RT" (retention time of metabolic features to be found, in minute, please put it to N/A if unknown), "IONMODE" (must be "Positive" or "Negative"),"ADDUCT" (precursor ion adduct type, must be one of "M+H","M+Na","M+K","M-H" and "M+Cl"), "CHARGE" (charge number, please keep it at 1) and "ID" (A unique identifier for targeted compounds in spectral library). If missing or NULL, a non-targeted feature screening will be performed using MatchedFilter from XCMS. In current release, this functionality only works when all input files are acquired on the same instrument and from the same ion mode, and they must all contain MS1 scans. Please be aware that non-targeted screening can lead to loss of important features or unwanted peaks (e.g. noise).}
 
-\item{mslevel}{Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula!}
-
-\item{MS1.screener}{Logical. TRUE if matchedFilter algorithm from XCMS is used to detect LC-MS feature peaks based on MS1 scans in the data. The detected feature peaks are used as metadata to assist the generation of spectral library.}
+\item{mslevel}{Must be 1 (if only MS1 scans/isotopic patterns of targeted m/z are extracted), 2 (if only MS2 scans are extracted) or c(1,2) (if both MS1 and MS2 scans are extracted). Note: Isotopic patterns in MS1 scans are useful for determining precursor formula !}
 
 \item{MS2_type}{A single character ("DDA" or "Targeted") if all raw_dat_files are acquired in the same mode; A character vector precising the acquisition mode of each file in raw_data_files (e.g. c("DDA","Targeted","DDA"))}
 
@@ -45,8 +42,6 @@ library_generator(raw_data_files, metadata_file, mslevel = c(1, 2),
 \item{input_library}{Character or library object. If character, name of the library into which new scans are added, the file extension must be mgf; please set to empty string "" or NULL if the new library has no dependency with previous ones.}
 
 \item{output_library}{Character.Name of the output library, the file extension must be mgf}
-
-\item{snthrehold}{Numeric higher than 1. Only used when MS1.screener = TRUE. Parameter used by MatchedFilter in XCMS to define chromatogram peaks.}
 }
 \value{
 \itemize{
