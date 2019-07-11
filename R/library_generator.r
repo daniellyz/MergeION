@@ -169,27 +169,10 @@ library_generator<-function(raw_data_files, metadata_file, mslevel = c(1,2),
         stop("The input library must be mgf format!")
   }}}
 
-  #if (missing(output_library) || file_ext(output_library)!="mgf"){
-  #  stop("The output library in mgf format must be filled!")
-  #}
-
-  #if (input_library==output_library){
-  #  stop("The new library must be saved under a different name as the previous library!")
-  #}
-
-  #if (missing(metadata_file) || is.null(metadata_file)){
-  #  is_positive = menu(c("Positive", "Negative", "Partially positive"), title="Polarity of your input files?")
-  #  if (is_positive==1){polarity = "positive"}
-  #  if (is_positive==2){polarity = "negative"}
-  #  if (is_positive==3){
-  #    stop("Automated MS1 Peak detection not possible with mixed ion mode in current release! All input files must be the same ion mode or please provide metadatafile!")
-  #  }
-  #  print("Starting MS1 peak dection across all files!")
-  #  ref <- try(MS1_screener(raw_data_files, polarity, rt_search*1.2, ppm_search*1.2, baseline=min(baseline)), silent=T)
-  #  if (class(ref) == "try-error"){
- #     stop("Automated MS1 Peak detection failed! It's possible that certain data files don't contain MS1 scans! Please provide metadata file!")
- #}
- #}
+  if (is.list(input_library)){
+    if (length(input_library)==2 & "complete" %in% names(input_library)){
+      input_library = input_library$complete
+  }}
 
   #######################################
   ### Read from metadata and old library:
@@ -237,8 +220,6 @@ library_generator<-function(raw_data_files, metadata_file, mslevel = c(1,2),
     spectrum_list=old_lib$sp
     metadata=old_lib$metadata
     max_scan = max(as.numeric(metadata$SCANS))
-    #metadata_items=colnames(metadata)[1:(ncol(metadata)-13)]
-    #metadata=metadata[,1:(ncol(metadata)-1)] # Remove LAST COLUMN SCANS!
     NN = length(spectrum_list)
   }
 
