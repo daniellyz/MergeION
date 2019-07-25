@@ -95,7 +95,7 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
   ### Preprocess query spectrum:
   ###############################
 
-  dat = query_spectrum[,1:2]
+  dat = query_spectrum[,1:2, drop = FALSE]
 
   # Normalize, cut only masses smaller than precursor and filter background noise:
 
