@@ -131,7 +131,8 @@ library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", 
 
   NS = nrow(metadata)
   nloss_list = lapply(1:NS, function(i) as.numeric(metadata$PEPMASS[i]) - spectrum_list[[i]][,1])
-  nloss_list = lapply(nloss_list, function(x) x[x>0])
+  #print(nloss_list)
+  #nloss_list = lapply(nloss_list, function(x) x[x>0])
 
   ###########################
   ### Run spectra search:
