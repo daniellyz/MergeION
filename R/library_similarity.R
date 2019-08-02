@@ -10,7 +10,8 @@
 #'   \item{All:}{ Conting number of fragment and neutral loss matches.}
 #'   \item{Cosine:}{ cosine similarity score from OrgMassSpecR package.}
 #' }
-#' @param prec_mz Numeric. Precursor mass of query spectrum (if known). Set to 0 if precursor mass is not used as a criterion of library search. Default value is 0.
+#' @param prec_mz Numeric. Precursor mass of query spectrum (if known). Default value is 0. Must NOT be 0 if method = "All" or use.prec = TRUE (see below)
+#' @param use.prec Boolean. If set to TRUE, precursor mass is used to "pre-query" the library
 #' @param ppm_search Numeric. Mass tolerance in ppm for precursor/fragment search.
 #' @param relative Numeric between 0 and 100. The relative intensity threshold of the highest peak in each spectrum). Peaks in query spectrum below relative thresholds are not taken into account.
 #' @param mirror.plot Boolean. True if the query-library comparison is visualized as mirror plot
@@ -30,7 +31,7 @@
 #'
 #' data(DRUG_THERMO_LIBRARY)
 #' dat = cbind(c(136.073,149.071,151.0991,180.047),c(1,1,20,3))
-#' query = library_similarity(library2, dat, method = "Cosine", prec_mz = 0, ppm_search = 20, relative = 1, mirror.plot = F)
+#' query = library_similarity(library2, dat, method = "Cosine", prec_mz = 0, use.prec =FALSE, ppm_search = 20, relative = 1, mirror.plot = F)
 #'
 #' # Query-library comparison via mirror plot:
 #' library_visualizer_similarity(query$SELECTED, id= query$ID_SELECTED[1], query_spectrum = dat)
@@ -42,8 +43,8 @@
 #'
 #' @export
 
-library_similarity<-function(library, query_spectrum=NULL , method = c("Simple", "All", "Cosine"),
-              prec_mz = 0, ppm_search = 20, relative = 1, mirror.plot = T, png.out=F){
+library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", "All", "Cosine"),
+              prec_mz = 0, use.prec = FALSE, ppm_search = 20, relative = 1, mirror.plot = T, png.out=F){
 
   options(stringsAsFactors = FALSE)
   options(warn=-1)
@@ -77,11 +78,15 @@ library_similarity<-function(library, query_spectrum=NULL , method = c("Simple",
     }
   }
 
+  if ((prec_mz == 0) && use.prec){
+    stop("Please provide the precursor mass if it is used for library search!")
+  }
+
   if ((prec_mz == 0) && (method == "All")){
     stop("Please provide the precursor mass if neutral loss are considered!")
   }
 
-  if (prec_mz!=0){
+  if ((prec_mz!=0) && use.prec){
     query = paste0("PEPMASS = ", prec_mz)
     library = library_manager(library, query = query, ppm_search = ppm_search)
     library = library$SELECTED # Filter library according to precursor mass
