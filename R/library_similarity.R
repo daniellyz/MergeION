@@ -6,8 +6,9 @@
 #' @param query_spectrum  Two-column data matrix. Two columns represent m/z and intensity of query tandem spectrum
 #' @param method Character. Method to compare the similarity between query spectrum and library spectra.
 #' \itemize{
-#'   \item{Simple:}{ Counting number of fragment matches}
-#'   \item{All:}{ Conting number of fragment and neutral loss matches.}
+#'   \item{Fragment:}{ Counting only number of fragment matches}
+#'   \item{Simple:}{ Conting number of fragment and neutral loss matches}
+#'   \item{All:}{ Conting number of fragment, neutral loss and mass differences matches.}
 #'   \item{Cosine:}{ cosine similarity score from OrgMassSpecR package.}
 #' }
 #' @param prec_mz Numeric. Precursor mass of query spectrum (if known). Default value is 0. Must NOT be 0 if method = "All" or use.prec = TRUE (see below)
@@ -43,7 +44,7 @@
 #'
 #' @export
 
-library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", "All", "Cosine"),
+library_similarity<-function(library, query_spectrum=NULL, method = c("Fragment", "Simple", "All", "Cosine"),
               prec_mz = 0, use.prec = FALSE, ppm_search = 20, relative = 1, mirror.plot = T, png.out=F){
 
   options(stringsAsFactors = FALSE)
@@ -86,6 +87,10 @@ library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", 
     stop("Please provide the precursor mass if neutral loss are considered!")
   }
 
+  if ((prec_mz == 0) && (method == "Simple")){
+    stop("Please provide the precursor mass if neutral loss are considered!")
+  }
+
   if ((prec_mz!=0) && use.prec){
     query = paste0("PEPMASS = ", prec_mz)
     library = library_manager(library, query = query, ppm_search = ppm_search)
@@ -108,15 +113,17 @@ library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", 
 
   if (prec_mz==0){prec_mz = 10000} # Not consider the precursor mass
 
-  selected = which((dat[,1] < prec_mz+10) & (dat[,2]>relative))
+  selected = which((dat[,1] < prec_mz+1)
+                   & (dat[,2]>relative)
+                   & ppm_distance(dat[,2], prec_mz)> ppm_search) # Remove non-precursor masses
 
   if (length(selected)>0){
-    dat = dat[selected,]
+    dat = dat[selected,,drop = FALSE]
     #dat = data.matrix(matrix(dat,ncol=2))
-    abs_search = ppm_search/1000000*median(dat[,1]) # Da window for spectra search
   } else {
     stop("Spectrum not valid!")
   }
+  dat_mdiff =  unique(unlist(dat[,1]))
 
   #####################################
   ### Reading from spectral library:
@@ -130,7 +137,9 @@ library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", 
   spectrum_list = library$sp
 
   NS = nrow(metadata)
-  nloss_list = lapply(1:NS, function(i) as.numeric(metadata$PEPMASS[i]) - spectrum_list[[i]][,1])
+  nloss_list = lapply(1:NS, function(i) as.numeric(metadata$PEPMASS[i])-spectrum_list[[i]][,1])
+  mdiff_list = lapply(1:NS, function(i) unique(unlist(dist(spectrum_list[[i]][,1]))))
+
   #print(nloss_list)
   #nloss_list = lapply(nloss_list, function(x) x[x>0])
 
@@ -143,18 +152,33 @@ library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", 
 
   for (i in 1:NS){
 
-    if (method == "Simple"){
-      dist_spec = abs(sapply(spectrum_list[[i]][,1], "-", dat[,1]))
-      sim_scores[i] = sum(dist_spec<=abs_search)
+
+    if (method == "Fragment"){
+      dist_spec = sapply(spectrum_list[[i]][,1],ppm_distance, dat[,1])
+      dist_spec[lower.tri(dist_spec)] = 10000000 # Remove redundant matches
+      sim_scores[i] = sum(dist_spec<=ppm_search)
      }
 
+    if (method == "Simple"){
+      dist_spec = sapply(spectrum_list[[i]][,1], ppm_distance, dat[,1])
+      dist_spec[lower.tri(dist_spec)] = 10000000 # Remove redundant matches
+      dist_loss = sapply(nloss_list[[i]], ppm_distance, prec_mz - dat[,1])
+      dist_loss[lower.tri(dist_loss)] = 10000000 # Remove redundant matches
+      sim_scores[i] = sum(dist_spec<=ppm_search) + sum(dist_loss<=ppm_search)
+    }
+
     if (method == "All"){
-      dist_spec = abs(sapply(spectrum_list[[i]][,1], "-", dat[,1]))
-      dist_loss = abs(sapply(nloss_list[[i]], "-", prec_mz - dat[,1]))
-      sim_scores[i] = sum(dist_spec<=abs_search) + sum(dist_loss<=abs_search)
+      dist_spec = sapply(spectrum_list[[i]][,1], ppm_distance, dat[,1])
+      dist_spec[lower.tri(dist_spec)] = 10000000 # Remove redundant matches
+      dist_loss = sapply(nloss_list[[i]], ppm_distance, prec_mz - dat[,1])
+      dist_loss[lower.tri(dist_loss)] = 10000000 # Remove redundant matches
+      dist_mdiff = sapply(mdiff_list[[i]], ppm_distance, dat_mdiff)
+      dist_mdiff[lower.tri(dist_mdiff)] = 10000000 # Remove redundant matches
+      sim_scores[i] = sum(dist_spec<=ppm_search) + sum(dist_loss<=ppm_search) + sum(dist_mdiff<=ppm_search)
     }
 
     if (method == "Cosine"){
+      abs_search = ppm_search/1000000*median(dat[,1]) # Da window for cosine spectra search
       sim_scores[i] = SpectrumSimilarity(dat, spectrum_list[[i]], t = abs_search)
     }
     graphics.off()
@@ -193,3 +217,12 @@ library_similarity<-function(library, query_spectrum=NULL, method = c("Simple", 
          ID_SELECTED = unique(SELECTED_LIBRARY$metadata$ID),
          SCORES = sim_scores))
 }
+
+############################
+### Internal functions:
+###########################
+
+ppm_distance<-function(x,y){
+  return(abs((x-y)/y*1000000))
+}
+
